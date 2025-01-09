@@ -31,7 +31,7 @@ public class ExceptionHandlers {
     })
     @ExceptionHandler(TaskException.class)
     public ResponseEntity<String> taskExceptionHandler(TaskException taskException){
-        return new ResponseEntity<>(taskException.getMessage(), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(taskException.getMessage(), taskException.getErrorCode());
     }
 
 }

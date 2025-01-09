@@ -10,7 +10,7 @@ public class Constant {
     public static final String EXIST_US="The username already exists";
     public static final String EXIST_MAIL="The email already exists";
     public static final String ABC="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_+=<>?";
-    public static final String TASK_NOT_EXIST="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_+=<>?";
+    public static final String TASK_NOT_EXIST="The task doesn't exists";
     public static final String STATUS_NOT_VALID="The status is not valid";
     public static final String TASK_CREATE="The task was created successfully";
     public static final String TASK_UPDATE="The task was updated successfully";

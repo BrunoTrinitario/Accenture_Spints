@@ -22,7 +22,7 @@ public class UserEntity {
     @Column(unique = false, nullable = true)
     private String password;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Task> tasks= new HashSet<>();;
 
     public UserEntity(){

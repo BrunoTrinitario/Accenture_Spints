@@ -39,29 +39,25 @@ public class UserServiceImpl implements UserService {
     }
 
     public void updateUser(UserRecord newuser) throws UserException {
-        UserEntity user=userRepository.findById(newuser.id()).orElse(null);
-        if (user==null){
-            throw new UserException(Constant.USR_NOT_EXIST, HttpStatus.NOT_FOUND);
-        }else{
-            validateNewData(user,newuser);
-            userRepository.save(user);
-        }
+        UserEntity user=userRepository.findById(newuser.id()).orElseThrow(()->new UserException(Constant.USR_NOT_EXIST, HttpStatus.NOT_FOUND));
+        validateNewData(user,newuser);
+        userRepository.save(user);
     }
 
     public void validateNewData(UserEntity user, UserRecord newuser) {
-        if (newuser.username()!=null && !newuser.username().isEmpty()){
+        if (newuser.username()!=null && !newuser.username().isBlank()){
             user.setUsername(newuser.username());
         }
-        if (newuser.email()!=null && !newuser.email().isEmpty()){
+        if (newuser.email()!=null && !newuser.email().isBlank()){
             user.setEmail(newuser.email());
         }
     }
 
     public void validateData(String username, String password) throws UserException {
-        if (password==null || password.isEmpty() || password.isBlank()) {
+        if (password==null || password.isBlank()) {
             throw new UserException(Constant.EMPTY_PASS, HttpStatus.BAD_REQUEST);
         }
-        if (username==null || username.isEmpty() || username.isBlank()) {
+        if (username==null || username.isBlank()) {
             throw new UserException(Constant.EMPTY_US, HttpStatus.BAD_REQUEST);
         }
 
@@ -77,12 +73,9 @@ public class UserServiceImpl implements UserService {
     }
 
     public UserEntity getUserById(Long id) throws UserException {
-        UserEntity user=userRepository.findById(id).orElse(null);
-        if (user==null){
-            throw new UserException(Constant.USR_NOT_EXIST, HttpStatus.NOT_FOUND);
-        }else{
-            return user;
-        }
+        UserEntity user=userRepository.findById(id).orElseThrow(()->new UserException(Constant.USR_NOT_EXIST, HttpStatus.NOT_FOUND));
+        return user;
+
     }
 
     private String generateRandomPassword(int pass_length){
