@@ -13,8 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.security.SecureRandom;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -36,7 +34,7 @@ public class UserServiceImpl implements UserService {
     public void createUser(NewUserRecord newuser) throws UserException {
         UserEntity user = new UserEntity(newuser.username(),passwordEncoder.encode(newuser.password()),newuser.email(), UserRoles.USER);
         validateData(user.getUsername(),user.getPassword());
-        validateExistentUser(user.getUsername(),user.getEmail());
+        validateExistentUser(user.getEmail());
         userRepository.save(user);
     }
 
@@ -73,10 +71,7 @@ public class UserServiceImpl implements UserService {
 
     }
 
-    public void validateExistentUser(String username, String email)throws UserException{
-        if (userRepository.findByUsername(username).isPresent()){
-            throw new UserException(Constant.EXIST_US, HttpStatus.CONFLICT);
-        }
+    public void validateExistentUser(String email)throws UserException{
         if (userRepository.findByEmail(email).isPresent()){
             throw new UserException(Constant.EXIST_MAIL, HttpStatus.CONFLICT);
         }
@@ -88,18 +83,6 @@ public class UserServiceImpl implements UserService {
 
     }
 
-    private String generateRandomPassword(int pass_length){
-        String CHARACTERS = Constant.ABC;
-        SecureRandom random = new SecureRandom();
-        StringBuilder password = new StringBuilder(pass_length);
-
-        for (int i = 0; i < pass_length; i++) {
-            int index = random.nextInt(CHARACTERS.length());
-            password.append(CHARACTERS.charAt(index));
-        }
-
-        return password.toString();
-    }
 
     public Long getIdByEmail(String email) throws UserException {
         UserEntity user=userRepository.findByEmail(email).orElseThrow(()->new UserException(Constant.USR_NOT_EXIST, HttpStatus.NOT_FOUND));

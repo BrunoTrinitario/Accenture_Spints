@@ -1,6 +1,7 @@
 package com.Sprint2.sprint2.repositories;
 
 import com.Sprint2.sprint2.model.UserEntity;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
@@ -11,13 +12,10 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
     boolean existsById(Long id);
 
-    Optional<UserEntity> findByUsername(String username);
-
+    @Transactional
     Optional<UserEntity> findByEmail(String email);
 
     void deleteById(Long id);
-
-    void deleteByEmail(String email);
 
 
 }

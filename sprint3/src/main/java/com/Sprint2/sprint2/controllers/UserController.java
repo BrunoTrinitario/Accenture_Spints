@@ -1,9 +1,7 @@
 package com.Sprint2.sprint2.controllers;
 
-import com.Sprint2.sprint2.config.JwtUtils;
 import com.Sprint2.sprint2.config.SecurityUtils;
 import com.Sprint2.sprint2.dtos.PatchUserRecord;
-import com.Sprint2.sprint2.dtos.UserRecord;
 import com.Sprint2.sprint2.exceptions.UserException;
 import com.Sprint2.sprint2.services.UserService;
 import com.Sprint2.sprint2.util.Constant;
@@ -13,7 +11,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 
 import org.springframework.web.bind.annotation.*;
 

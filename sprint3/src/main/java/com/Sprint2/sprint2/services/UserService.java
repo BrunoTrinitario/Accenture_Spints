@@ -15,8 +15,6 @@ public interface UserService {
 
     void createUser(NewUserRecord newuser) throws UserException;
 
-    void deleteUserbyID(Long id) throws UserException;
-
     void updateUser(String email, PatchUserRecord newuser) throws UserException;
 
     UserEntity getUserById(Long id) throws UserException;

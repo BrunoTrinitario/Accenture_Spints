@@ -3,6 +3,7 @@ package com.Sprint2.sprint2.controllers;
 import com.Sprint2.sprint2.config.SecurityUtils;
 import com.Sprint2.sprint2.dtos.NewTaskRecord;
 import com.Sprint2.sprint2.dtos.TaskRecord;
+import com.Sprint2.sprint2.exceptions.TaskException;
 import com.Sprint2.sprint2.exceptions.UserException;
 import com.Sprint2.sprint2.model.Task;
 import com.Sprint2.sprint2.services.TaskService;
@@ -12,16 +13,15 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Set;
 
 @RestController
 @RequestMapping("/API/task")
 public class TaskController {
+
     @Autowired
     private TaskService taskService;
 
@@ -35,7 +35,7 @@ public class TaskController {
             @ApiResponse(responseCode = "404", description = "Task not found.")
     })
     @GetMapping("/{task_id}")
-    public ResponseEntity<?> getOneTask(@Parameter(name = "task_id",description = "The task id to be found",required = false)@PathVariable Long task_id) throws UserException {
+    public ResponseEntity<?> getOneTask(@Parameter(name = "task_id",description = "The task id to be found",required = false)@PathVariable Long task_id) throws TaskException {
         String email= securityUtils.getAutenticatedEmail();
         return ResponseEntity.status(200).body(taskService.getOneTaskById(email,task_id));
     }
@@ -50,6 +50,7 @@ public class TaskController {
         String email= securityUtils.getAutenticatedEmail();
         return ResponseEntity.status(200).body(taskService.getTaskByUserEmail(email));
     }
+
     @Operation(summary = "Create a Task", description = "Create a new task for a specific user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Task created successfully."),
@@ -62,6 +63,7 @@ public class TaskController {
         TaskRecord tr=new TaskRecord(task.getId(),task.getTitle(),task.getDescription(),task.getStatus());
         return ResponseEntity.status(HttpStatus.CREATED).body(tr);
     }
+
     @Operation(summary = "Update a Task", description = "Update the details of an existing task.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Task updated successfully."),
@@ -75,6 +77,7 @@ public class TaskController {
         TaskRecord tr=new TaskRecord(task.getId(),task.getTitle(),task.getDescription(),task.getStatus());
         return ResponseEntity.status(HttpStatus.OK).body(tr);
     }
+
     @Operation(summary = "Delete a Task", description = "Delete a task by its ID.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Task deleted successfully."),

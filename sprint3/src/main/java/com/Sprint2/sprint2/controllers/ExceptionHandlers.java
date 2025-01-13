@@ -2,10 +2,12 @@ package com.Sprint2.sprint2.controllers;
 
 import com.Sprint2.sprint2.exceptions.TaskException;
 import com.Sprint2.sprint2.exceptions.UserException;
+import com.Sprint2.sprint2.util.Constant;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -32,6 +34,11 @@ public class ExceptionHandlers {
     @ExceptionHandler(TaskException.class)
     public ResponseEntity<String> taskExceptionHandler(TaskException taskException){
         return new ResponseEntity<>(taskException.getMessage(), taskException.getErrorCode());
+    }
+
+    @ExceptionHandler(ExpiredJwtException.class)
+    public ResponseEntity<String> jwtExpiredExceptionHandler(ExpiredJwtException expiredJwtException){
+       return ResponseEntity.status(HttpStatusCode.valueOf(203)).body(Constant.JWT_EXPIRED);
     }
 
 }

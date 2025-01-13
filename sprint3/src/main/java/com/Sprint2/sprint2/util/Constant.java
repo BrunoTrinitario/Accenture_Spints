@@ -16,5 +16,6 @@ public class Constant {
     public static final String TASK_UPDATE="The task was updated successfully";
     public static final String TASK_DELETE="The task was deleted successfully";
     public static final String USR_TASK_NOT_PERMITTED="The user don't have the permissions to read the task";
+    public static final String JWT_EXPIRED="The json web token its expired";
 
 }

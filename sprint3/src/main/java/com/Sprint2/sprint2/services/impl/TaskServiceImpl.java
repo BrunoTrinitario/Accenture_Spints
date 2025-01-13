@@ -14,9 +14,7 @@ import com.Sprint2.sprint2.util.Constant;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -28,11 +26,16 @@ public class TaskServiceImpl implements TaskService {
     @Autowired
     private UserService userService;
 
-    public TaskRecord getOneTaskById(String email,Long id) throws TaskException, UserException{
-        Long id_user = userService.getIdByEmail(email);
-        Task task = taskRepository.findById(id).orElseThrow(()-> new TaskException(Constant.TASK_NOT_EXIST, HttpStatus.NOT_FOUND));
-        validateUserId(task.getUser().getId(), id_user);
-        return new TaskRecord(task.getId(),task.getTitle(), task.getDescription(), task.getStatus());
+    public TaskRecord getOneTaskById(String email,Long id) throws TaskException{
+        try {
+            Long id_user = userService.getIdByEmail(email);
+            Task task = taskRepository.findById(id).orElseThrow(()-> new TaskException(Constant.TASK_NOT_EXIST, HttpStatus.NOT_FOUND));
+            validateUserId(task.getUser().getId(), id_user);
+            return new TaskRecord(task.getId(),task.getTitle(), task.getDescription(), task.getStatus());
+        } catch (UserException e) {
+            throw new TaskException(Constant.USR_NOT_EXIST, HttpStatus.NOT_FOUND);
+        }
+
     }
 
     public void validateUserId(Long user_task_id, Long user_id){
@@ -47,11 +50,16 @@ public class TaskServiceImpl implements TaskService {
         return taskrecords;
     }
 
-    public Set<TaskRecord> getTaskByUserEmail(String email) throws UserException {
-        Long id_user = userService.getIdByEmail(email);
-        List<Task> tasks = taskRepository.findByUserId(id_user);
-        Set<TaskRecord> taskrecords = tasks.stream().map(task-> new TaskRecord(task.getId(),task.getTitle(),task.getDescription(),task.getStatus())).collect(Collectors.toSet());
-        return taskrecords;
+    public Set<TaskRecord> getTaskByUserEmail(String email) throws TaskException {
+        try {
+            Long id_user = userService.getIdByEmail(email);
+            List<Task> tasks = taskRepository.findByUserId(id_user);
+            Set<TaskRecord> taskrecords = tasks.stream().map(task-> new TaskRecord(task.getId(),task.getTitle(),task.getDescription(),task.getStatus())).collect(Collectors.toSet());
+            return taskrecords;
+        } catch (UserException e) {
+            throw new TaskException(Constant.USR_NOT_EXIST, HttpStatus.NOT_FOUND);
+        }
+
     }
 
     public Task createTask(String email, NewTaskRecord newTask) throws TaskException{
