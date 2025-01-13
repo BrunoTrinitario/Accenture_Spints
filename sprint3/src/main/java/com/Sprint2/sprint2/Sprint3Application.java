@@ -24,23 +24,18 @@ public class Sprint3Application {
 		return args -> {
 
 
-			UserEntity u1=new UserEntity("bruno",passwordEncoder.encode("bruno"),"asd", UserRoles.ADMIN);
-			UserEntity u2=new UserEntity("bruno1","bruno1","asd1",UserRoles.USER);
-			UserEntity u3=new UserEntity("bruno2","bruno2","asd2",UserRoles.ADMIN);
+			UserEntity u1=new UserEntity("admin",passwordEncoder.encode("admin"),"admin", UserRoles.ADMIN);
+			UserEntity u2=new UserEntity("bruno","bruno","bruno",UserRoles.USER);
 
 			Task t1= new Task("a","b", TaskStatus.IN_PROGRESS, u1);
 			Task t11=new Task("A","B", TaskStatus.IN_PROGRESS, u1);
 			Task t2= new Task("x","x", TaskStatus.IN_PROGRESS, u2);
-			Task t3= new Task("y","y", TaskStatus.IN_PROGRESS, u3);
 
 			userRepository.save(u1);
 			userRepository.save(u2);
-			userRepository.save(u3);
 			taskRepository.save(t1);
 			taskRepository.save(t11);
 			taskRepository.save(t2);
-			taskRepository.save(t3);
-
 
 			System.out.println("The api its running");
 		};

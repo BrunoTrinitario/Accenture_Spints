@@ -38,12 +38,11 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
-    public void deleteUserbyID(Long id) throws UserException {
-        if (!userRepository.existsById(id)){
-            throw new UserException(Constant.USR_NOT_EXIST, HttpStatus.NOT_FOUND);
-        }else {
-            userRepository.deleteById(id);
-        }
+    public void createAdmin(NewUserRecord newuser) throws UserException{
+        UserEntity user = new UserEntity(newuser.username(),passwordEncoder.encode(newuser.password()),newuser.email(), UserRoles.ADMIN);
+        validateData(user.getUsername(),user.getPassword());
+        validateExistentUser(user.getEmail());
+        userRepository.save(user);
     }
 
     public void updateUser(String email, PatchUserRecord newuser) throws UserException {
