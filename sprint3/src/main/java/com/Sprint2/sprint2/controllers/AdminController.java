@@ -69,7 +69,7 @@ public class AdminController {
             )
     })
     @PostMapping("/user")
-    public ResponseEntity<?> createAdmin(@Parameter(name = "newuser",description = "The data of the user to be created",required = true) NewUserRecord newuser) throws UserException {
+    public ResponseEntity<?> createAdmin(@Parameter(name = "newuser",description = "The data of the user to be created",required = true)@RequestBody NewUserRecord newuser) throws UserException {
         userService.createAdmin(newuser);
         return ResponseEntity.status(200).body(Constant.USR_CREATE);
     }

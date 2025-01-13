@@ -25,7 +25,7 @@ public class Sprint3Application {
 
 
 			UserEntity u1=new UserEntity("admin",passwordEncoder.encode("admin"),"admin", UserRoles.ADMIN);
-			UserEntity u2=new UserEntity("bruno","bruno","bruno",UserRoles.USER);
+			UserEntity u2=new UserEntity("bruno",passwordEncoder.encode("bruno"),"bruno",UserRoles.USER);
 
 			Task t1= new Task("a","b", TaskStatus.IN_PROGRESS, u1);
 			Task t11=new Task("A","B", TaskStatus.IN_PROGRESS, u1);

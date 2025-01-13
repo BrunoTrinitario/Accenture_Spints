@@ -32,15 +32,15 @@ public class UserServiceImpl implements UserService {
     }
 
     public void createUser(NewUserRecord newuser) throws UserException {
+        validateData(newuser.username(),newuser.password());
         UserEntity user = new UserEntity(newuser.username(),passwordEncoder.encode(newuser.password()),newuser.email(), UserRoles.USER);
-        validateData(user.getUsername(),user.getPassword());
         validateExistentUser(user.getEmail());
         userRepository.save(user);
     }
 
     public void createAdmin(NewUserRecord newuser) throws UserException{
+        validateData(newuser.username(),newuser.password());
         UserEntity user = new UserEntity(newuser.username(),passwordEncoder.encode(newuser.password()),newuser.email(), UserRoles.ADMIN);
-        validateData(user.getUsername(),user.getPassword());
         validateExistentUser(user.getEmail());
         userRepository.save(user);
     }
