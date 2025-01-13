@@ -8,11 +8,11 @@
 		<version>3.4.1</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.Sprint2</groupId>
-	<artifactId>sprint2</artifactId>
+	<groupId>com.Sprint3</groupId>
+	<artifactId>sprint3</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>sprint2</name>
-	<description>Sprint 2 - Bootcamp Accenture 2025 java immersion</description>
+	<name>sprint3</name>
+	<description>Sprint 3 - Bootcamp Accenture 2025 java immersion</description>
 	<url/>
 	<licenses>
 		<license/>
