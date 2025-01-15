@@ -35,7 +35,6 @@ public class TaskServiceImpl implements TaskService {
         } catch (UserException e) {
             throw new TaskException(Constant.USR_NOT_EXIST, HttpStatus.NOT_FOUND);
         }
-
     }
 
     public void validateUserId(Long user_task_id, Long user_id){

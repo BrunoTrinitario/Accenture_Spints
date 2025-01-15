@@ -29,8 +29,6 @@ public class UserEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Task> tasks= new HashSet<>();
 
-
-
     public UserEntity(){
     }
 
