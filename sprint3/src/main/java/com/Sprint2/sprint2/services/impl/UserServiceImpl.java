@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -51,12 +52,16 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
-    public void validateNewData(UserEntity user, PatchUserRecord newuser) {
+    public void validateNewData(UserEntity user, PatchUserRecord newuser) throws UserException {
         if (newuser.username()!=null && !newuser.username().isBlank()){
             user.setUsername(newuser.username());
+        }else{
+            throw new UserException(Constant.EMPTY_US, HttpStatus.BAD_REQUEST);
         }
         if (newuser.password()!=null && !newuser.password().isBlank()){
             user.setPassword(passwordEncoder.encode(newuser.password()));
+        }else{
+            throw new UserException(Constant.EMPTY_PASS, HttpStatus.BAD_REQUEST);
         }
     }
 

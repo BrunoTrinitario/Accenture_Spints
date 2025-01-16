@@ -58,7 +58,6 @@ public class TaskServiceImpl implements TaskService {
         } catch (UserException e) {
             throw new TaskException(Constant.USR_NOT_EXIST, HttpStatus.NOT_FOUND);
         }
-
     }
 
     public Task createTask(String email, NewTaskRecord newTask) throws TaskException{
@@ -71,7 +70,6 @@ public class TaskServiceImpl implements TaskService {
         } catch (UserException e) {
             throw new TaskException(Constant.USR_NOT_EXIST, HttpStatus.NOT_FOUND);
         }
-
     }
 
     public Task updateTask(String email, Long task_id,NewTaskRecord newDataTask) throws TaskException{

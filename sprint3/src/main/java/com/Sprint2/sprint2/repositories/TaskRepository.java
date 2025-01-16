@@ -9,13 +9,5 @@ import java.util.Optional;
 
 @Repository
 public interface TaskRepository extends JpaRepository<Task, Long> {
-
-    Optional<Task> findById(Long id);
-
-    boolean existsById(Long id);
-
     List<Task> findByUserId(Long id);
-
-    void deleteById(Long id);
-
 }

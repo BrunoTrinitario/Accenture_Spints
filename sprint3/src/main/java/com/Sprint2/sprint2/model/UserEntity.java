@@ -39,6 +39,10 @@ public class UserEntity {
         this.rol=rol;
     }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public String getUsername() {
         return username;
     }

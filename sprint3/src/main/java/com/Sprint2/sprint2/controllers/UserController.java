@@ -39,7 +39,8 @@ public class UserController {
 
     @Operation(summary = "Delete User", description = "Deletes the logged user ")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "User deleted successfully.")
+            @ApiResponse(responseCode = "200", description = "User deleted successfully."),
+            @ApiResponse(responseCode = "404", description = "User not found.")
     })
     @DeleteMapping()
     public ResponseEntity<?> deleteUser() throws UserException {
