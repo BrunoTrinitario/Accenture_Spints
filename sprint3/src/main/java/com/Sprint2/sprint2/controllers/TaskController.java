@@ -84,7 +84,7 @@ public class TaskController {
             @ApiResponse(responseCode = "404", description = "Task not found.")
     })
     @DeleteMapping("/{task_id}")
-    public ResponseEntity<?> updateTask(@Parameter(name = "task_id",description = "The task id to be deleted",required = false)@PathVariable Long task_id){
+    public ResponseEntity<?> deleteTask(@Parameter(name = "task_id",description = "The task id to be deleted",required = false)@PathVariable Long task_id){
         String email= securityUtils.getAutenticatedEmail();
         taskService.deleteTask(email,task_id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(Constant.TASK_DELETE);
