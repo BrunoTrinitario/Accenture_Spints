@@ -84,7 +84,6 @@ public class UserServiceImpl implements UserService {
     public UserEntity getUserById(Long id) throws UserException {
         UserEntity user=userRepository.findById(id).orElseThrow(()->new UserException(Constant.USR_NOT_EXIST, HttpStatus.NOT_FOUND));
         return user;
-
     }
 
 

@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -76,6 +77,30 @@ public class ControllerUserTest {
     }
 
     @Test
+    void testPatchUser_InvalidData() throws Exception {
+        String body_to_send = "";
+        when(securityUtils.getAutenticatedEmail()).thenReturn(email);
+        doNothing().when(userService).updateUser(anyString(),any(PatchUserRecord.class));
+        mockMvc.perform(patch(uri)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body_to_send)
+                        .header("Authorization", "Bearer " + token ))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testPatchUser_UserNotFound() throws Exception {
+        String body_to_send = "";
+        when(securityUtils.getAutenticatedEmail()).thenReturn(email);
+        doThrow(new UserException(Constant.USR_NOT_EXIST, HttpStatus.NOT_FOUND)).when(userService).updateUser(anyString(),any(PatchUserRecord.class));
+        mockMvc.perform(patch(uri)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body_to_send)
+                        .header("Authorization", "Bearer " + token ))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void testDeleteUser_Success() throws Exception {
         String body_to_send = "{\"password\":\"password\",\"username\":\"username\"}";
 
@@ -86,10 +111,7 @@ public class ControllerUserTest {
                         .header("Authorization", "Bearer " + token ))
                 .andExpect(status().isOk())
                 .andExpect(content().string(Constant.USR_DELETE));
-
     }
-
-
 
 
 }

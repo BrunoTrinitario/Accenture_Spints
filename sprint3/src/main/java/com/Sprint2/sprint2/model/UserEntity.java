@@ -88,4 +88,5 @@ public class UserEntity {
     public void setRol(UserRoles rol) {
         this.rol = rol;
     }
+
 }
