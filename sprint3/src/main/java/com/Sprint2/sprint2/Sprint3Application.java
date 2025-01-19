@@ -21,27 +21,4 @@ public class Sprint3Application {
 		SpringApplication.run(Sprint3Application.class, args);
 	}
 
-	//@Bean
-	//public CommandLineRunner initData(UserRepository userRepository, TaskRepository taskRepository, PasswordEncoder passwordEncoder, UserService userService){
-	//	return args -> {
-//
-//
-	//		UserEntity u1=new UserEntity("admin",passwordEncoder.encode("admin"),"admin", UserRoles.ADMIN);
-	//		UserEntity u2=new UserEntity("bruno",passwordEncoder.encode("bruno"),"bruno",UserRoles.USER);
-//
-	//		Task t1= new Task("a","b", TaskStatus.IN_PROGRESS, u1);
-	//		Task t11=new Task("A","B", TaskStatus.IN_PROGRESS, u1);
-	//		Task t2= new Task("x","x", TaskStatus.IN_PROGRESS, u2);
-//
-	//		userRepository.save(u1);
-	//		userRepository.save(u2);
-	//		taskRepository.save(t1);
-	//		taskRepository.save(t11);
-	//		taskRepository.save(t2);
-//
-	//		System.out.println("The api its running");
-//
-	//	};
-	//}
-
 }
