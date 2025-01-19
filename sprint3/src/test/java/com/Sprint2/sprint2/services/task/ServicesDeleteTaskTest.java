@@ -82,7 +82,7 @@ public class ServicesDeleteTaskTest {
     }
 
     @Test
-    public void SuccessfulUpdateTaskTest() throws UserException {
+    public void SuccessfulDeleteTaskTest() throws UserException {
         UserEntity user = new UserEntity("username","password","email", UserRoles.USER);
         user.setId(1L);
         Task task = new Task("title","description", TaskStatus.PENDING, user);
