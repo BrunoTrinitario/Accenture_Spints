@@ -7,6 +7,7 @@ import com.Sprint2.sprint2.model.UserRoles;
 import com.Sprint2.sprint2.repositories.UserRepository;
 import com.Sprint2.sprint2.services.UserService;
 import com.Sprint2.sprint2.util.Constant;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,8 +37,12 @@ public class ServicesRepositoryUpdateUserTest {
     @BeforeEach
     public void setup(){
         user = new UserEntity("username",  passwordEncoder.encode("password"), "email", UserRoles.USER);
+        user = userRepository.save(user);
+    }
+
+    @AfterEach
+    public void delete_instances(){
         userRepository.deleteAll();
-        userRepository.save(user);
     }
 
     @Test
@@ -99,8 +104,8 @@ public class ServicesRepositoryUpdateUserTest {
     public void SuccessfulUpdateUserTest(){
         PatchUserRecord patchUserRecord = new PatchUserRecord("password","new_username");
         try{
-            userService.updateUser("email",patchUserRecord);
-            Long id = userService.getIdByEmail("email");
+            userService.updateUser(user.getEmail(),patchUserRecord);
+            Long id = userService.getIdByEmail(user.getEmail());
             UserEntity user = userService.getUserById(id);
             assertEquals(user.getUsername(),"new_username");
             assertTrue(passwordEncoder.matches("password", user.getPassword()));

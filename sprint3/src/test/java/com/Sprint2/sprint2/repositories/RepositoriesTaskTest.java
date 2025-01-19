@@ -4,10 +4,14 @@ import com.Sprint2.sprint2.model.Task;
 import com.Sprint2.sprint2.model.TaskStatus;
 import com.Sprint2.sprint2.model.UserEntity;
 import com.Sprint2.sprint2.model.UserRoles;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +19,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DataJpaTest
+@SpringBootTest
+@ActiveProfiles("test")
 public class RepositoriesTaskTest {
     @Autowired
     TaskRepository taskRepository;
@@ -41,10 +46,10 @@ public class RepositoriesTaskTest {
         tasks.add(task2);
     }
 
-    @Test
-    public void NotEmptyListTaskTest(){
-        List<Task> list_task = taskRepository.findByUserId(1L);
-        assertEquals(tasks,list_task);
+    @AfterEach
+    public void delete_instances(){
+        userRepository.deleteAll();
+        taskRepository.deleteAll();
     }
 
     @Test

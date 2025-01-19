@@ -11,6 +11,7 @@ import com.Sprint2.sprint2.repositories.TaskRepository;
 import com.Sprint2.sprint2.repositories.UserRepository;
 import com.Sprint2.sprint2.services.TaskService;
 import com.Sprint2.sprint2.util.Constant;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,12 +45,16 @@ public class ServicesRepositoryCreateTaskTest {
         task=new Task("title","description", TaskStatus.PENDING, user);
         task2=new Task("title2","description2", TaskStatus.PENDING, user2);
         newTaskRecord = new NewTaskRecord("titulo","descripcion",TaskStatus.COMPLETED);
+        user = userRepository.save(user);
+        user2 = userRepository.save(user2);
+        task = taskRepository.save(task);
+        task2 = taskRepository.save(task2);
+    }
+
+    @AfterEach
+    public void delete_instances(){
         userRepository.deleteAll();
-        userRepository.save(user);
-        userRepository.save(user2);
         taskRepository.deleteAll();
-        taskRepository.save(task);
-        taskRepository.save(task2);
     }
 
 
@@ -79,11 +84,5 @@ public class ServicesRepositoryCreateTaskTest {
         assertEquals(newTaskRecord.description(),task.getDescription());
         assertEquals(newTaskRecord.status(),task.getStatus());
     }
-
-
-
-
-
-
 
 }

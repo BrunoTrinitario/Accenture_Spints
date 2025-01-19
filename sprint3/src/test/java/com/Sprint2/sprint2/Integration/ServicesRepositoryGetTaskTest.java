@@ -12,6 +12,7 @@ import com.Sprint2.sprint2.repositories.TaskRepository;
 import com.Sprint2.sprint2.repositories.UserRepository;
 import com.Sprint2.sprint2.services.TaskService;
 import com.Sprint2.sprint2.util.Constant;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,15 +51,21 @@ public class ServicesRepositoryGetTaskTest {
         task2=new Task("title2","description2", TaskStatus.PENDING, user2);
         task3=new Task("title","description", TaskStatus.PENDING, user);
 
-        userRepository.deleteAll();
-        userRepository.save(user);
-        userRepository.save(user2);
-        taskRepository.deleteAll();
-        taskRepository.save(task);
-        taskRepository.save(task2);
-        taskRepository.save(task3);
+        user=userRepository.save(user);
+        user2=userRepository.save(user2);
+        task=taskRepository.save(task);
+        task2=taskRepository.save(task2);
+        task3=taskRepository.save(task3);
 
     }
+
+
+    @AfterEach
+    public void delete_instances(){
+        userRepository.deleteAll();
+        taskRepository.deleteAll();
+    }
+
 
     @Test
     public void UserNotFoundGetOneTaskTest() throws UserException {
@@ -84,7 +91,7 @@ public class ServicesRepositoryGetTaskTest {
     @Test
     public void UserNotPermittedGetOneTaskTest() throws UserException {
         try{
-            taskService.getOneTaskById(user2.getEmail(), 1L);
+            taskService.getOneTaskById(user2.getEmail(), task.getId());
             fail();
         }catch (TaskException e){
             assertEquals(Constant.USR_TASK_NOT_PERMITTED,e.getMessage());

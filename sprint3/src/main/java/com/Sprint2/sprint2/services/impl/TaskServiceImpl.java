@@ -38,7 +38,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     public void validateUserId(Long user_task_id, Long user_id){
-        if (user_task_id!=user_id){
+        if (!user_task_id.equals(user_id)){
             throw new TaskException(Constant.USR_TASK_NOT_PERMITTED,HttpStatus.UNAUTHORIZED);
         }
     }
