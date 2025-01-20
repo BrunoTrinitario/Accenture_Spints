@@ -60,13 +60,14 @@ public class TaskServiceImpl implements TaskService {
         }
     }
 
-    public Task createTask(String email, NewTaskRecord newTask) throws TaskException{
+    public TaskRecord createTask(String email, NewTaskRecord newTask) throws TaskException{
         validateTask(newTask.status());
         try {
             Long id_user = userService.getIdByEmail(email);
             UserEntity user = userService.getUserById(id_user);
             Task task = new Task(newTask.title(), newTask.description(), newTask.status(), user);
-            return taskRepository.save(task);
+            TaskRecord taskRecord = new TaskRecord(task.getId(),newTask.title(),newTask.description(),newTask.status());
+            return taskRecord;
         } catch (UserException e) {
             throw new TaskException(Constant.USR_NOT_EXIST, HttpStatus.NOT_FOUND);
         }

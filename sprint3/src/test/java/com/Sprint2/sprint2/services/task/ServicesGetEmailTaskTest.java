@@ -29,11 +29,11 @@ import static org.mockito.Mockito.when;
 @ActiveProfiles("test")
 public class ServicesGetEmailTaskTest {
     @Autowired
-    TaskService taskService;
+    private TaskService taskService;
     @MockitoBean
-    TaskRepository taskRepository;
+    private TaskRepository taskRepository;
     @MockitoBean
-    UserService userService;
+    private UserService userService;
 
     @Test
     public void NullEmailGetByEmailTasksTest() throws UserException {

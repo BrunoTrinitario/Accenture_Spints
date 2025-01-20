@@ -23,12 +23,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ActiveProfiles("test")
 public class RepositoriesTaskTest {
     @Autowired
-    TaskRepository taskRepository;
+    private TaskRepository taskRepository;
 
     @Autowired
-    UserRepository userRepository;
+    private UserRepository userRepository;
 
-    List<Task> tasks;
+    private List<Task> tasks;
 
     @BeforeEach
     public void setup(){

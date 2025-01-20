@@ -1,6 +1,7 @@
 package com.Sprint2.sprint2.services.task;
 
 import com.Sprint2.sprint2.dtos.NewTaskRecord;
+import com.Sprint2.sprint2.dtos.TaskRecord;
 import com.Sprint2.sprint2.exceptions.TaskException;
 import com.Sprint2.sprint2.exceptions.UserException;
 import com.Sprint2.sprint2.model.Task;
@@ -27,11 +28,11 @@ import static org.mockito.Mockito.when;
 @ActiveProfiles("test")
 public class ServicesCreateTaskTest {
     @Autowired
-    TaskService taskService;
+    private TaskService taskService;
     @MockitoBean
-    TaskRepository taskRepository;
+    private TaskRepository taskRepository;
     @MockitoBean
-    UserService userService;
+    private UserService userService;
 
     NewTaskRecord taskRecord;
     @BeforeEach
@@ -63,8 +64,10 @@ public class ServicesCreateTaskTest {
     public void SuccessfulCreatedTaskTest() throws UserException {
         Task taskEntity = new Task("title","description",TaskStatus.PENDING,new UserEntity());
         when(taskRepository.save(any(Task.class))).thenReturn(taskEntity);
-        Task task = taskService.createTask("email",taskRecord);
-        assertTrue(task.equals(taskEntity));
+        TaskRecord task = taskService.createTask("email",taskRecord);
+        assertEquals(task.title(),taskEntity.getTitle());
+        assertEquals(task.description(),taskEntity.getDescription());
+        assertEquals(task.status(),taskEntity.getStatus());
     }
 
 

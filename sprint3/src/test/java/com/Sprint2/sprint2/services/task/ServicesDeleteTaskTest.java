@@ -11,6 +11,7 @@ import com.Sprint2.sprint2.services.TaskService;
 import com.Sprint2.sprint2.services.UserService;
 import com.Sprint2.sprint2.util.Constant;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
@@ -21,17 +22,18 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ActiveProfiles("test")
 public class ServicesDeleteTaskTest {
     @Autowired
-    TaskService taskService;
+    private TaskService taskService;
     @MockitoBean
-    TaskRepository taskRepository;
+    private TaskRepository taskRepository;
     @MockitoBean
-    UserService userService;
+    private UserService userService;
 
     @Test
     public void NullEmailDeleteTaskTest() throws UserException {

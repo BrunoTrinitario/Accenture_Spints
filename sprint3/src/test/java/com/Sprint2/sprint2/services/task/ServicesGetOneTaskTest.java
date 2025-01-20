@@ -31,18 +31,19 @@ import static org.mockito.Mockito.when;
 @ActiveProfiles("test")
 public class ServicesGetOneTaskTest {
     @Autowired
-    TaskService taskService;
+    private TaskService taskService;
     @MockitoBean
-    TaskRepository taskRepository;
+    private TaskRepository taskRepository;
     @MockitoBean
-    UserService userService;
+    private UserService userService;
 
-    UserEntity user1;
-    Task task;
+    private UserEntity user1;
+    private Task task;
 
     @BeforeEach
     public void setup(){
         user1=new UserEntity("username1","password1","email1", UserRoles.USER);
+        user1.setId(1L);
         task=new Task("titulo","descripcion", TaskStatus.IN_PROGRESS, user1);
     }
 

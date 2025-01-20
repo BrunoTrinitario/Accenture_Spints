@@ -22,10 +22,10 @@ import static org.mockito.Mockito.when;
 @ActiveProfiles("test")
 public class ServicesGetUserByIdTest {
     @Autowired
-    UserService userService;
+    private UserService userService;
 
     @MockitoBean
-    UserRepository userRepository;
+    private UserRepository userRepository;
 
     @Test
     public void UserNotFoundGetUserByIdTest(){

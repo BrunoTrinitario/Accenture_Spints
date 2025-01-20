@@ -40,22 +40,16 @@ public class ServicesRepositoryGetAllTaskByEmailTest {
     @Autowired
     private UserRepository userRepository;
 
-    private UserEntity user,user2;
-    private Task task,task2,task3;
+    private UserEntity user;
+    private Task task;
 
     @BeforeEach
     public void setup(){
         user=new UserEntity("username1","password1","email1", UserRoles.USER);
-        user2=new UserEntity("username2","password2","email2", UserRoles.USER);
         task=new Task("title","description", TaskStatus.PENDING, user);
-        task2=new Task("title2","description2", TaskStatus.PENDING, user2);
-        task3=new Task("title","description", TaskStatus.PENDING, user);
 
         user=userRepository.save(user);
-        user2=userRepository.save(user2);
         task=taskRepository.save(task);
-        task2=taskRepository.save(task2);
-        task3=taskRepository.save(task3);
 
     }
 

@@ -23,15 +23,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ServicesRepositoryDeleteUserTest {
 
     @Autowired
-    UserService userService;
+    private UserService userService;
 
     @Autowired
-    UserRepository userRepository;
+    private UserRepository userRepository;
 
     @Autowired
-    PasswordEncoder passwordEncoder;
+    private PasswordEncoder passwordEncoder;
 
-    UserEntity user;
+    private UserEntity user;
 
     @BeforeEach
     public void setup(){

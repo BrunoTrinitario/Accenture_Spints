@@ -28,14 +28,14 @@ import static org.mockito.Mockito.when;
 @ActiveProfiles("test")
 public class ServicesUpdateTaskTest {
     @Autowired
-    TaskService taskService;
+    private TaskService taskService;
     @MockitoBean
-    TaskRepository taskRepository;
+    private TaskRepository taskRepository;
     @MockitoBean
-    UserService userService;
+    private UserService userService;
 
-    NewTaskRecord newTaskRecord;
-    Task task;
+    private NewTaskRecord newTaskRecord;
+    private Task task;
 
     @BeforeEach
     public void setup(){

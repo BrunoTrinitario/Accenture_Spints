@@ -24,10 +24,10 @@ import static org.mockito.Mockito.when;
 @ActiveProfiles("test")
 public class ServicesUpdateUserTest {
     @Autowired
-    UserService userService;
+    private UserService userService;
 
     @MockitoBean
-    UserRepository userRepository;
+    private UserRepository userRepository;
 
     @Test
     public void UserNotFoundUpdateTest(){

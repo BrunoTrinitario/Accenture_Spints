@@ -59,8 +59,7 @@ public class TaskController {
     @PostMapping()
     public ResponseEntity<?> createTask(@Parameter(name = "newTask",description = "The data of the task to be created",required = true)@RequestBody NewTaskRecord newTask){
         String email= securityUtils.getAutenticatedEmail();
-        Task task=taskService.createTask(email, newTask);
-        TaskRecord tr=new TaskRecord(task.getId(),task.getTitle(),task.getDescription(),task.getStatus());
+        TaskRecord tr=taskService.createTask(email, newTask);
         return ResponseEntity.status(HttpStatus.CREATED).body(tr);
     }
 

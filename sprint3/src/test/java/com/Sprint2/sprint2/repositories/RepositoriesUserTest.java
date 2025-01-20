@@ -19,9 +19,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @ActiveProfiles("test")
 public class RepositoriesUserTest {
     @Autowired
-    UserRepository userRepository;
+    private UserRepository userRepository;
 
-    UserEntity user;
+    private UserEntity user;
+
     @BeforeEach
     public void setup(){
         user=new UserEntity("username","password","email", UserRoles.USER);
