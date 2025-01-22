@@ -1,0 +1,9 @@
+package com.mindhub.product_service.util;
+
+public class Constants {
+    public static final String PRODUCT_NOT_FOUND = "The product doesn't exists";
+    public static final String PRODUCT_EXISTS = "The product already exists";
+    public static final String INVALID_NAME = "The name its invalid";
+    public static final String INVALID_PRICE = "The price must be positive or 0";
+    public static final String INVALID_STOCK = "The stock must be positive or 0";
+}
