@@ -10,6 +10,7 @@ import com.mindhub.user_service.repositories.UserRepository;
 import com.mindhub.user_service.services.UserService;
 import com.mindhub.user_service.util.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -30,14 +31,14 @@ public class UserServiceImp implements UserService {
 
     @Override
     public UserRecord getUserById(Long id) throws UserException {
-        UserEntity user = userRepository.findById(id).orElseThrow(()->new UserException(Constants.USR_NOT_EXIST));
+        UserEntity user = userRepository.findById(id).orElseThrow(()->new UserException(Constants.USR_NOT_EXIST, HttpStatus.NOT_FOUND));
         UserRecord userRecord = new UserRecord(user.getId(), user.getUsername(),user.getEmail(),user.getUserRol());
         return userRecord;
     }
 
     @Override
     public UserRecord getUserByEmail(String email) throws UserException {
-        UserEntity user = userRepository.findByEmail(email).orElseThrow(()->new UserException(Constants.USR_NOT_EXIST));
+        UserEntity user = userRepository.findByEmail(email).orElseThrow(()->new UserException(Constants.USR_NOT_EXIST, HttpStatus.NOT_FOUND));
         UserRecord userRecord = new UserRecord(user.getId(), user.getUsername(),user.getEmail(),user.getUserRol());
         return userRecord;
     }
@@ -68,7 +69,7 @@ public class UserServiceImp implements UserService {
     public UserRecord updateUser(Long id, UpdateUserRecord updateUserRecord) throws UserException {
         validateUsername(updateUserRecord.username());
         validatePassword(updateUserRecord.password());
-        UserEntity user = userRepository.findById(id).orElseThrow(()->new UserException(Constants.USR_NOT_EXIST));
+        UserEntity user = userRepository.findById(id).orElseThrow(()->new UserException(Constants.USR_NOT_EXIST, HttpStatus.NOT_FOUND));
         user.setUsername(updateUserRecord.username());
         user.setPassword(updateUserRecord.password());
         user = userRepository.save(user);
@@ -79,7 +80,7 @@ public class UserServiceImp implements UserService {
     @Override
     public void deleteUserById(Long id) throws UserException {
         if (!existUserByid(id)){
-            throw new UserException(Constants.USR_NOT_EXIST);
+            throw new UserException(Constants.USR_NOT_EXIST, HttpStatus.NOT_FOUND);
         }else{
             userRepository.deleteById(id);
         }
@@ -89,7 +90,7 @@ public class UserServiceImp implements UserService {
     @Override
     public void deleteUserByEmail(String email) throws UserException {
         if(!existUserByEmail(email)){
-            throw new UserException(Constants.USR_NOT_EXIST);
+            throw new UserException(Constants.USR_NOT_EXIST, HttpStatus.NOT_FOUND);
         }else
             userRepository.deleteByEmail(email);
     }
@@ -106,7 +107,7 @@ public class UserServiceImp implements UserService {
 
     @Override
     public Long getIdByEmail(String email) throws UserException {
-        UserEntity user = userRepository.findByEmail(email).orElseThrow(()->new UserException(Constants.USR_NOT_EXIST));
+        UserEntity user = userRepository.findByEmail(email).orElseThrow(()->new UserException(Constants.USR_NOT_EXIST, HttpStatus.NOT_FOUND));
         return user.getId();
     }
 
@@ -124,7 +125,7 @@ public class UserServiceImp implements UserService {
 
     private void validateEmail(String email) throws UserException {
         if (existUserByEmail(email)){
-            throw new UserException(Constants.EXIST_EMAIL);
+            throw new UserException(Constants.EXIST_EMAIL,HttpStatus.CONFLICT);
         }
     }
 

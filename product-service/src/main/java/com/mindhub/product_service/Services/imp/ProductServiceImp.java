@@ -7,6 +7,7 @@ import com.mindhub.product_service.models.NewProduct;
 import com.mindhub.product_service.models.Product;
 import com.mindhub.product_service.util.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -27,7 +28,7 @@ public class ProductServiceImp implements ProductService {
 
     @Override
     public Product getProductById(Long id) throws ProductException {
-        Product product = productRepository.findById(id).orElseThrow(()->new ProductException(Constants.PRODUCT_NOT_FOUND));
+        Product product = productRepository.findById(id).orElseThrow(()->new ProductException(Constants.PRODUCT_NOT_FOUND, HttpStatus.NOT_FOUND));
         return product;
     }
 
@@ -45,7 +46,7 @@ public class ProductServiceImp implements ProductService {
     public Product updateProduct(Long id, NewProduct newProduct) throws ProductException {
         validatePrice(newProduct.price());
         validateStock(newProduct.stock());
-        Product product = productRepository.findById(id).orElseThrow(()->new ProductException(Constants.PRODUCT_NOT_FOUND));
+        Product product = productRepository.findById(id).orElseThrow(()->new ProductException(Constants.PRODUCT_NOT_FOUND, HttpStatus.NOT_FOUND));
 
         if (newProduct.description()!=null && !newProduct.description().isBlank())
             product.setDescription(newProduct.description());
@@ -69,7 +70,7 @@ public class ProductServiceImp implements ProductService {
         if (productRepository.existsById(id)){
             productRepository.deleteById(id);
         }else{
-            throw new ProductException(Constants.PRODUCT_NOT_FOUND);
+            throw new ProductException(Constants.PRODUCT_NOT_FOUND, HttpStatus.NOT_FOUND);
         }
     }
 
@@ -85,13 +86,13 @@ public class ProductServiceImp implements ProductService {
 
     @Override
     public Long getIdByName(String name) throws ProductException {
-        Product product = productRepository.findByName(name).orElseThrow(()->new ProductException(Constants.PRODUCT_NOT_FOUND));
+        Product product = productRepository.findByName(name).orElseThrow(()->new ProductException(Constants.PRODUCT_NOT_FOUND, HttpStatus.NOT_FOUND));
         return product.getId();
     }
 
     private void validateName(String name) throws ProductException {
         if (existsProductByName(name)){
-            throw new ProductException(Constants.PRODUCT_EXISTS);
+            throw new ProductException(Constants.PRODUCT_EXISTS,HttpStatus.CONFLICT);
         }else{
             if (name!=null && name.isBlank()){
                 throw new ProductException(Constants.INVALID_NAME);

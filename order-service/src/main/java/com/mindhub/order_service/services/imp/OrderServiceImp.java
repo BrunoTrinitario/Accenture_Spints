@@ -12,6 +12,7 @@ import com.mindhub.order_service.services.OrderItemService;
 import com.mindhub.order_service.services.OrderService;
 import com.mindhub.order_service.util.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.Iterator;
@@ -44,7 +45,7 @@ public class OrderServiceImp implements OrderService, OrderItemService {
 
     @Override
     public OrderDTO getOrderById(Long id) throws OrderException {
-        OrderEntity order = orderRepository.findById(id).orElseThrow(() -> new OrderException(Constants.ORDER_NOT_FOUND));
+        OrderEntity order = orderRepository.findById(id).orElseThrow(() -> new OrderException(Constants.ORDER_NOT_FOUND, HttpStatus.NOT_FOUND));
         OrderDTO orderDTO = new OrderDTO(order);
         return orderDTO;
     }
@@ -66,7 +67,7 @@ public class OrderServiceImp implements OrderService, OrderItemService {
 
     @Override
     public OrderDTO changeStatus(Long id, OrderStatus orderStatus) throws OrderException {
-        OrderEntity order = orderRepository.findById(id).orElseThrow(() -> new OrderException(Constants.ORDER_NOT_FOUND));
+        OrderEntity order = orderRepository.findById(id).orElseThrow(() -> new OrderException(Constants.ORDER_NOT_FOUND, HttpStatus.NOT_FOUND));
         order.setOrderStatus(orderStatus);
         order = orderRepository.save(order);
         return new OrderDTO(order);
@@ -77,7 +78,7 @@ public class OrderServiceImp implements OrderService, OrderItemService {
         if (existsOrder(id)){
             orderRepository.deleteById(id);
         }else{
-            throw new OrderException(Constants.ORDER_NOT_FOUND);
+            throw new OrderException(Constants.ORDER_NOT_FOUND, HttpStatus.NOT_FOUND);
         }
     }
 
@@ -88,14 +89,14 @@ public class OrderServiceImp implements OrderService, OrderItemService {
 
     @Override
     public Set<OrderItemRecord> getAllOrderItemsByOrderId(Long id) throws OrderException {
-        OrderEntity order = orderRepository.findById(id).orElseThrow(() -> new OrderException(Constants.ORDER_NOT_FOUND));
+        OrderEntity order = orderRepository.findById(id).orElseThrow(() -> new OrderException(Constants.ORDER_NOT_FOUND, HttpStatus.NOT_FOUND));
         Set<OrderItemRecord> orderItemSet = order.getOrderItemList().stream().map(orderItem -> new OrderItemRecord(orderItem.getId(),orderItem.getProductId(),orderItem.getQuantity())).collect(Collectors.toSet());
         return orderItemSet;
     }
 
     @Override
     public OrderItemRecord addOrderItem(NewOrderItemRecord newOrderItem) throws OrderException, OrderItemException {
-        OrderEntity order = orderRepository.findById(newOrderItem.orderId()).orElseThrow(() -> new OrderException(Constants.ORDER_NOT_FOUND));
+        OrderEntity order = orderRepository.findById(newOrderItem.orderId()).orElseThrow(() -> new OrderException(Constants.ORDER_NOT_FOUND, HttpStatus.NOT_FOUND));
         validateOrderItem(newOrderItem.orderId(),newOrderItem.productId());
         if (newOrderItem.quantity()<0 || newOrderItem.quantity()==null){
             throw new OrderItemException(Constants.INV_QUANTITY);
@@ -121,14 +122,14 @@ public class OrderServiceImp implements OrderService, OrderItemService {
         if (existsOrderItem(id)){
             orderItemRepository.deleteById(id);
         }else{
-            throw new OrderItemException(Constants.ORDER_ITEM_NOT_FOUND);
+            throw new OrderItemException(Constants.ORDER_ITEM_NOT_FOUND, HttpStatus.NOT_FOUND);
         }
 
     }
 
     @Override
     public OrderItemRecord updateOrderItem(Long id, Integer quantity) throws OrderItemException {
-        OrderItem orderItem = orderItemRepository.findById(id).orElseThrow(()->new OrderItemException(Constants.ORDER_ITEM_NOT_FOUND));
+        OrderItem orderItem = orderItemRepository.findById(id).orElseThrow(()->new OrderItemException(Constants.ORDER_ITEM_NOT_FOUND, HttpStatus.NOT_FOUND));
         orderItem.setQuantity(quantity);
         orderItem = orderItemRepository.save(orderItem);
         return new OrderItemRecord(orderItem.getId(),orderItem.getProductId(),orderItem.getQuantity());
