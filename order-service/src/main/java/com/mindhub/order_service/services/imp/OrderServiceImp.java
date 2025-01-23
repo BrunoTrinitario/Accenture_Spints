@@ -25,6 +25,8 @@ import org.springframework.web.client.RestTemplate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.toList;
+
 @Service
 public class OrderServiceImp implements OrderService, OrderItemService {
 
@@ -73,27 +75,35 @@ public class OrderServiceImp implements OrderService, OrderItemService {
                     new ParameterizedTypeReference<>() {};
             HttpEntity<List<ProductQuantityRecord>> httpEntity = new HttpEntity<>(newOrder.recordList());
             ResponseEntity<List<ExistentProductsRecord>> responseEntity = restTemplate.exchange(productPath, HttpMethod.PUT ,httpEntity, responseType);
-            System.out.println(userId);
-            System.out.println(responseEntity.getBody());
-            filterProductList(newOrder.recordList(),responseEntity.getBody());
-            OrderEntity order = new OrderEntity(newOrder.orderItemList(), userId, OrderStatus.PENDING);
-            order = orderRepository.save(order);
+
+            OrderEntity order = new OrderEntity(null, userId, OrderStatus.PENDING);
+            orderRepository.save(order);
+
+            generateOrderItemList(responseEntity.getBody(), order);
+
+            orderRepository.save(order);
+
             OrderDTO orderDTO = new OrderDTO(order);
+
+            return orderDTO;
         }catch (Exception e){
+            //filtrar por excepcion y throws
             System.out.println(e.getClass());
+            return null;
         }
-
-
-
-        return null;
     }
 
-    private List<OrderItem> filterProductList(List<ProductQuantityRecord> userList, List<ExistentProductsRecord> existentProductsList){
+    private void generateOrderItemList(List<ExistentProductsRecord> productQuantityList, OrderEntity order){
         List<OrderItem> orderItemList = new ArrayList<>();
-
+        Iterator<ExistentProductsRecord> it = productQuantityList.iterator();
+        while (it.hasNext()){
+            ExistentProductsRecord aux = it.next();
+            OrderItem orderItem = new OrderItem(aux.quantity(),order, aux.id());
+            orderItemRepository.save(orderItem);
+            orderItemList.add(orderItem);
+        }
+        order.setOrderItemList(orderItemList);
     }
-
-
 
     @Override
     public OrderDTO changeStatus(Long id, OrderStatus orderStatus) throws OrderException {

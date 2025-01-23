@@ -94,20 +94,21 @@ public class ProductServiceImp implements ProductService {
     }
 
     @Override
-    public List<ExistentProductsRecord> getAllAvailableProducts(List<ProductQuantityRecord> productQuantityRecordList) {
+    public List<ExistentProductsRecord> getAllAvailableProducts(List<ProductQuantityRecord> productQuantityRecordList){
         List<ExistentProductsRecord> listOfProducts = new ArrayList<>();
         productQuantityRecordList.forEach( product -> {
             if (existsProductById(product.id())){
                 try {
                     Product realProduct = getProductById(product.id());
                     if (realProduct.getStock()>=product.quantity()){
-                        listOfProducts.add(new ExistentProductsRecord(product.id(), realProduct.getName(), realProduct.getPrice()));
-                        realProduct.setStock(realProduct.getStock()- product.quantity());
+                        System.out.println("anda");
+                        listOfProducts.add(new ExistentProductsRecord(product.id(), realProduct.getPrice(), product.quantity()));
+                        realProduct.setStock(realProduct.getStock() - product.quantity());
                         productRepository.save(realProduct);
-                    }else{
-                        listOfProducts.add(new ExistentProductsRecord(product.id(), realProduct.getName(), null));
                     }
-                } catch (ProductException e) {}
+                } catch (ProductException e) {
+                    throw new RuntimeException(e);
+                }
             }
         });
         return listOfProducts;
