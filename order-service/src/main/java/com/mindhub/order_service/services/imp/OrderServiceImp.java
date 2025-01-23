@@ -14,13 +14,15 @@ import com.mindhub.order_service.util.Constants;
 import com.mindhub.order_service.util.RestTemplateConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,13 +35,13 @@ public class OrderServiceImp implements OrderService, OrderItemService {
     private OrderItemRepository orderItemRepository;
 
     @Autowired
-    private RestTemplateConfig restTemplateConfig;
+    private RestTemplate restTemplate;
 
     @Value("${USERS_PATH}")
     private String userPath;
 
     @Value("${PRODUCTS_PATH}")
-    private String prodcuctPath;
+    private String productPath;
 
     @Override
     public Set<OrderDTO> getAllOrders() {
@@ -65,15 +67,30 @@ public class OrderServiceImp implements OrderService, OrderItemService {
     @Override
     public OrderDTO createOrder(NewOrderRecord newOrder) throws OrderException {
         String uri = "/email/" + newOrder.email();
-        Long userId = restTemplateConfig.restTemplate().getForObject(userPath + uri, Long.class);
+        try{
+            Long userId = restTemplate.getForObject(userPath + uri, Long.class);
+            ParameterizedTypeReference<List<ExistentProductsRecord>> responseType =
+                    new ParameterizedTypeReference<>() {};
+            HttpEntity<List<ProductQuantityRecord>> httpEntity = new HttpEntity<>(newOrder.recordList());
+            ResponseEntity<List<ExistentProductsRecord>> responseEntity = restTemplate.exchange(productPath, HttpMethod.PUT ,httpEntity, responseType);
+            System.out.println(userId);
+            System.out.println(responseEntity.getBody());
+            filterProductList(newOrder.recordList(),responseEntity.getBody());
+            OrderEntity order = new OrderEntity(newOrder.orderItemList(), userId, OrderStatus.PENDING);
+            order = orderRepository.save(order);
+            OrderDTO orderDTO = new OrderDTO(order);
+        }catch (Exception e){
+            System.out.println(e.getClass());
+        }
 
-        //List<ExistentProductsRecord> existentProductsRecordList = restTemplateConfig.restTemplate().patchForObject(prodcuctPath, newOrder.recordList(),List.class);
-        System.out.println(userId);
-        //System.out.println(existentProductsRecordList);
-        //OrderEntity order = new OrderEntity(newOrder.orderItemList(), userId, OrderStatus.PENDING);
-        //order = orderRepository.save(order);
-        //OrderDTO orderDTO = new OrderDTO(order);
+
+
         return null;
+    }
+
+    private List<OrderItem> filterProductList(List<ProductQuantityRecord> userList, List<ExistentProductsRecord> existentProductsList){
+        List<OrderItem> orderItemList = new ArrayList<>();
+
     }
 
 

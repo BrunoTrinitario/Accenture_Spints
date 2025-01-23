@@ -86,10 +86,11 @@ public class ProductController {
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping()
+    @PutMapping
     public ResponseEntity<List<ExistentProductsRecord>> existsProducts(@RequestBody List<ProductQuantityRecord> recordList){
         List<ExistentProductsRecord> products = productService.getAllAvailableProducts(recordList);
         return ResponseEntity.ok(products);
     }
+
 
 }

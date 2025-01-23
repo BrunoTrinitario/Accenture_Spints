@@ -16,15 +16,12 @@ public class RestTemplateConfig {
     public RestTemplate restTemplate() {
         RestTemplate restTemplate = new RestTemplate();
 
-        restTemplate.setErrorHandler(new DefaultResponseErrorHandler() {
-            @Override
-            public void handleError(ClientHttpResponse response) throws IOException {
-                // Specific error handling
-                if (response.getStatusCode() == HttpStatus.NOT_FOUND) {
-
-                }
-            }
-        });
+        //restTemplate.setErrorHandler(new DefaultResponseErrorHandler() {
+        //    @Override
+        //    public void handleError(ClientHttpResponse response) throws IOException {
+        //        System.out.println("xdxdxdxdxdxdxd");
+        //    }
+        //});
 
         return restTemplate;
     }
