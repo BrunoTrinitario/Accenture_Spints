@@ -11,12 +11,15 @@ import com.mindhub.order_service.repositories.OrderRepository;
 import com.mindhub.order_service.services.OrderItemService;
 import com.mindhub.order_service.services.OrderService;
 import com.mindhub.order_service.util.Constants;
+import com.mindhub.order_service.util.RestTemplateConfig;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -28,6 +31,15 @@ public class OrderServiceImp implements OrderService, OrderItemService {
 
     @Autowired
     private OrderItemRepository orderItemRepository;
+
+    @Autowired
+    private RestTemplateConfig restTemplateConfig;
+
+    @Value("${USERS_PATH}")
+    private String userPath;
+
+    @Value("${PRODUCTS_PATH}")
+    private String prodcuctPath;
 
     @Override
     public Set<OrderDTO> getAllOrders() {
@@ -52,18 +64,19 @@ public class OrderServiceImp implements OrderService, OrderItemService {
 
     @Override
     public OrderDTO createOrder(NewOrderRecord newOrder) throws OrderException {
-        validateNewOrder(newOrder);
-        OrderEntity order = new OrderEntity(newOrder.orderItemList(), newOrder.userId(), newOrder.orderStatus());
-        order = orderRepository.save(order);
-        OrderDTO orderDTO = new OrderDTO(order);
-        return orderDTO;
+        String uri = "/email/" + newOrder.email();
+        Long userId = restTemplateConfig.restTemplate().getForObject(userPath + uri, Long.class);
+
+        //List<ExistentProductsRecord> existentProductsRecordList = restTemplateConfig.restTemplate().patchForObject(prodcuctPath, newOrder.recordList(),List.class);
+        System.out.println(userId);
+        //System.out.println(existentProductsRecordList);
+        //OrderEntity order = new OrderEntity(newOrder.orderItemList(), userId, OrderStatus.PENDING);
+        //order = orderRepository.save(order);
+        //OrderDTO orderDTO = new OrderDTO(order);
+        return null;
     }
 
-    private void validateNewOrder(NewOrderRecord newOrder) throws OrderException {
-        if (newOrder.userId()==null || newOrder.orderStatus()==null){
-            throw new OrderException(Constants.INVALID_ORDER);
-        }
-    }
+
 
     @Override
     public OrderDTO changeStatus(Long id, OrderStatus orderStatus) throws OrderException {

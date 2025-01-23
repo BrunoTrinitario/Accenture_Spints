@@ -31,6 +31,20 @@ public class UserController {
     }
 
     /**
+     * Retrieve a user by their ID.
+     * @param email The ID of the user to retrieve.
+     * @return A {@link ResponseEntity} containing the requested {@link UserRecord}.
+     * @throws UserException If the user is not found or an error occurs.
+     * @response 200 OK - The requested user.
+     * @response 404 NOT FOUND - If the user is not found.
+     */
+    @GetMapping("/email/{email}")
+    public ResponseEntity<Long> getUserByEmail(@PathVariable String email) throws UserException {
+        UserRecord user = userService.getUserByEmail(email);
+        return ResponseEntity.ok(user.id());
+    }
+
+    /**
      * Create a new user.
      * @param newUserRecord The {@link NewUserRecord} containing the user's details.
      * @return A {@link ResponseEntity} containing the created {@link UserRecord}.

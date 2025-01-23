@@ -3,13 +3,16 @@ package com.mindhub.product_service.Services.imp;
 import com.mindhub.product_service.Repositories.ProductRepository;
 import com.mindhub.product_service.Services.ProductService;
 import com.mindhub.product_service.exceptions.ProductException;
+import com.mindhub.product_service.models.ExistentProductsRecord;
 import com.mindhub.product_service.models.NewProduct;
 import com.mindhub.product_service.models.Product;
+import com.mindhub.product_service.models.ProductQuantityRecord;
 import com.mindhub.product_service.util.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -88,6 +91,26 @@ public class ProductServiceImp implements ProductService {
     public Long getIdByName(String name) throws ProductException {
         Product product = productRepository.findByName(name).orElseThrow(()->new ProductException(Constants.PRODUCT_NOT_FOUND, HttpStatus.NOT_FOUND));
         return product.getId();
+    }
+
+    @Override
+    public List<ExistentProductsRecord> getAllAvailableProducts(List<ProductQuantityRecord> productQuantityRecordList) {
+        List<ExistentProductsRecord> listOfProducts = new ArrayList<>();
+        productQuantityRecordList.forEach( product -> {
+            if (existsProductById(product.id())){
+                try {
+                    Product realProduct = getProductById(product.id());
+                    if (realProduct.getStock()>=product.quantity()){
+                        listOfProducts.add(new ExistentProductsRecord(product.id(), realProduct.getName(), realProduct.getPrice()));
+                        realProduct.setStock(realProduct.getStock()- product.quantity());
+                        productRepository.save(realProduct);
+                    }else{
+                        listOfProducts.add(new ExistentProductsRecord(product.id(), realProduct.getName(), null));
+                    }
+                } catch (ProductException e) {}
+            }
+        });
+        return listOfProducts;
     }
 
     private void validateName(String name) throws ProductException {

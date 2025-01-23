@@ -2,12 +2,15 @@ package com.mindhub.product_service.controllers;
 
 import com.mindhub.product_service.Services.ProductService;
 import com.mindhub.product_service.exceptions.ProductException;
+import com.mindhub.product_service.models.ExistentProductsRecord;
 import com.mindhub.product_service.models.NewProduct;
 import com.mindhub.product_service.models.Product;
+import com.mindhub.product_service.models.ProductQuantityRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Set;
 
 @RestController
@@ -81,6 +84,12 @@ public class ProductController {
     public ResponseEntity<Void> deleteProductById(@PathVariable Long id) throws ProductException {
         productService.deleteProductById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping()
+    public ResponseEntity<List<ExistentProductsRecord>> existsProducts(@RequestBody List<ProductQuantityRecord> recordList){
+        List<ExistentProductsRecord> products = productService.getAllAvailableProducts(recordList);
+        return ResponseEntity.ok(products);
     }
 
 }
