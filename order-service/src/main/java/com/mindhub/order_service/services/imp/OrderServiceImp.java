@@ -86,10 +86,10 @@ public class OrderServiceImp implements OrderService, OrderItemService {
             OrderDTO orderDTO = new OrderDTO(order);
 
             return orderDTO;
-        }catch (Exception e){
-            //filtrar por excepcion y throws
-            System.out.println(e.getClass());
-            return null;
+        } catch (HttpClientErrorException.NotFound e) {
+            throw new RuntimeException("User with email " + newOrder.email() + " not found");
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            throw new RuntimeException("Error communicating with product-service: " + e.getMessage());
         }
     }
 
