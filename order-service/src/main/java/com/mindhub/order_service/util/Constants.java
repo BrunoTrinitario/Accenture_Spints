@@ -6,4 +6,6 @@ public class Constants {
     public static final String INVALID_ORDER = "Invalid new order data";
     public static final String ITEM_ALREADY_EXISTS = "The product its already into the order, you may want to change the quantity";
     public static final String INV_QUANTITY = "The quantity provide its invalid";
+    public static final String COM_ERR_PROD = "Error communicating with product-service";
+    public static final String COM_USR_PROD = "Error communicating with user-service";
 }

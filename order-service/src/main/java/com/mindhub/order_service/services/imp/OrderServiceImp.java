@@ -6,12 +6,14 @@ import com.mindhub.order_service.exceptions.OrderItemException;
 import com.mindhub.order_service.models.OrderEntity;
 import com.mindhub.order_service.models.OrderItem;
 import com.mindhub.order_service.models.OrderStatus;
+import com.mindhub.order_service.models.ProductError;
 import com.mindhub.order_service.repositories.OrderItemRepository;
 import com.mindhub.order_service.repositories.OrderRepository;
 import com.mindhub.order_service.services.OrderItemService;
 import com.mindhub.order_service.services.OrderService;
 import com.mindhub.order_service.util.Constants;
 import com.mindhub.order_service.util.RestTemplateConfig;
+import org.aspectj.weaver.ast.Or;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -20,6 +22,9 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
@@ -67,30 +72,68 @@ public class OrderServiceImp implements OrderService, OrderItemService {
     }
 
     @Override
-    public OrderDTO createOrder(NewOrderRecord newOrder) throws OrderException {
-        String uri = "/email/" + newOrder.email();
-        try{
-            Long userId = restTemplate.getForObject(userPath + uri, Long.class);
+    public OrderCreatedRecord createOrder(NewOrderRecord newOrder) throws OrderException {
+
+            Long userId = getUserIdFromEmail(newOrder.email());
+
             ParameterizedTypeReference<List<ExistentProductsRecord>> responseType =
                     new ParameterizedTypeReference<>() {};
             HttpEntity<List<ProductQuantityRecord>> httpEntity = new HttpEntity<>(newOrder.recordList());
-            ResponseEntity<List<ExistentProductsRecord>> responseEntity = restTemplate.exchange(productPath, HttpMethod.PUT ,httpEntity, responseType);
 
-            OrderEntity order = new OrderEntity(null, userId, OrderStatus.PENDING);
-            orderRepository.save(order);
+            try{
+                ResponseEntity<List<ExistentProductsRecord>> responseEntity = restTemplate.exchange(productPath, HttpMethod.PUT ,httpEntity, responseType);
+                OrderEntity order = new OrderEntity(null, userId, OrderStatus.PENDING);
+                orderRepository.save(order);
+                generateOrderItemList(responseEntity.getBody(), order);
+                orderRepository.save(order);
 
-            generateOrderItemList(responseEntity.getBody(), order);
+                List<ErrorProductRecord> errorList = generateErrorProductList(newOrder.recordList(), responseEntity.getBody());
 
-            orderRepository.save(order);
+                OrderDTO orderDTO = new OrderDTO(order);
 
-            OrderDTO orderDTO = new OrderDTO(order);
+                OrderCreatedRecord orderCreatedRecord = new OrderCreatedRecord(orderDTO, errorList);
 
-            return orderDTO;
-        }catch (Exception e){
-            //filtrar por excepcion y throws
-            System.out.println(e.getClass());
-            return null;
+                return orderCreatedRecord;
+            }catch (HttpClientErrorException e){
+                throw new OrderException(Constants.COM_ERR_PROD, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+    }
+
+    private Long getUserIdFromEmail(String email) throws OrderException {
+        try{
+            String url = userPath + "/email/" + email;
+            Long userId = restTemplate.getForObject(url, Long.class);
+            return userId;
+        } catch (RestClientException e) {
+            if (e instanceof HttpStatusCodeException){
+                HttpStatusCodeException aux = (HttpStatusCodeException)e;
+                throw new OrderException(Constants.COM_ERR_PROD, (HttpStatus) aux.getStatusCode());
+            }else{
+                throw new OrderException(Constants.COM_USR_PROD, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
         }
+    }
+
+    private List<ErrorProductRecord> generateErrorProductList(List<ProductQuantityRecord> userProductsList,List<ExistentProductsRecord> existentProductsList){
+        List<ErrorProductRecord> errorProductList = new ArrayList<>();
+        List<ProductQuantityRecord> aux = userProductsList.stream()
+                .filter(userProduct ->
+                        !existentProductsList.stream().anyMatch(availableProduct ->
+                                availableProduct.id().equals(userProduct.id()) && availableProduct.price() != null)
+                ).toList();
+
+        aux.forEach(product -> {
+            boolean productExists = existentProductsList.stream()
+                        .anyMatch(p -> p.id().equals(product.id()));
+               if (productExists) {
+                   errorProductList.add(new ErrorProductRecord(product.id(), ProductError.NO_STOCK));
+               } else {
+                   errorProductList.add(new ErrorProductRecord(product.id(), ProductError.NOT_FOUND));
+               }
+        });
+
+        return  errorProductList;
     }
 
     private void generateOrderItemList(List<ExistentProductsRecord> productQuantityList, OrderEntity order){
@@ -98,9 +141,11 @@ public class OrderServiceImp implements OrderService, OrderItemService {
         Iterator<ExistentProductsRecord> it = productQuantityList.iterator();
         while (it.hasNext()){
             ExistentProductsRecord aux = it.next();
-            OrderItem orderItem = new OrderItem(aux.quantity(),order, aux.id());
-            orderItemRepository.save(orderItem);
-            orderItemList.add(orderItem);
+            if (aux.price()!=null){
+                OrderItem orderItem = new OrderItem(aux.quantity(),order, aux.id());
+                orderItemRepository.save(orderItem);
+                orderItemList.add(orderItem);
+            }
         }
         order.setOrderItemList(orderItemList);
     }

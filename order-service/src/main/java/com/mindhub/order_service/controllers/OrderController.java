@@ -1,6 +1,7 @@
 package com.mindhub.order_service.controllers;
 
 import com.mindhub.order_service.dtos.NewOrderRecord;
+import com.mindhub.order_service.dtos.OrderCreatedRecord;
 import com.mindhub.order_service.dtos.OrderDTO;
 import com.mindhub.order_service.dtos.UpdateOrderRecord;
 import com.mindhub.order_service.exceptions.OrderException;
@@ -65,8 +66,8 @@ public class OrderController {
      */
 
     @PostMapping
-    public ResponseEntity<OrderDTO> createOrder(@RequestBody NewOrderRecord newOrder) throws OrderException {
-        OrderDTO createdOrder = orderService.createOrder(newOrder);
+    public ResponseEntity<OrderCreatedRecord> createOrder(@RequestBody NewOrderRecord newOrder) throws OrderException {
+        OrderCreatedRecord createdOrder = orderService.createOrder(newOrder);
         return new ResponseEntity<>(createdOrder, HttpStatus.CREATED);
     }
 
