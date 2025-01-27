@@ -2,11 +2,12 @@ package com.mindhub.product_service.controllers;
 
 import com.mindhub.product_service.Services.ProductService;
 import com.mindhub.product_service.exceptions.ProductException;
-import com.mindhub.product_service.models.ExistentProductsRecord;
-import com.mindhub.product_service.models.NewProduct;
+import com.mindhub.product_service.dtos.ExistentProductsRecord;
+import com.mindhub.product_service.dtos.NewProduct;
 import com.mindhub.product_service.models.Product;
-import com.mindhub.product_service.models.ProductQuantityRecord;
+import com.mindhub.product_service.dtos.ProductQuantityRecord;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,8 +26,8 @@ public class ProductController {
      * @response 200 OK - List of all products.
      */
     @GetMapping
-    public ResponseEntity<Set<Product>> getAllProducts() {
-        Set<Product> products = productService.getAllProducts();
+    public ResponseEntity<Set<ExistentProductsRecord>> getAllProducts() {
+        Set<ExistentProductsRecord> products = productService.getAllProducts();
         return ResponseEntity.ok(products);
     }
 
@@ -67,8 +68,8 @@ public class ProductController {
      * @response 400 Bad gateway - If the input data its invalid
      */
     @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody NewProduct newProduct) throws ProductException {
-        Product updatedProduct = productService.updateProduct(id, newProduct);
+    public ResponseEntity<ExistentProductsRecord> updateProduct(@PathVariable Long id, @RequestBody NewProduct newProduct) throws ProductException {
+        ExistentProductsRecord updatedProduct = productService.updateProduct(id, newProduct);
         return ResponseEntity.ok(updatedProduct);
     }
 
@@ -90,6 +91,12 @@ public class ProductController {
     public ResponseEntity<List<ExistentProductsRecord>> existsProducts(@RequestBody List<ProductQuantityRecord> recordList){
         List<ExistentProductsRecord> products = productService.getAllAvailableProducts(recordList);
         return ResponseEntity.ok(products);
+    }
+
+    @PutMapping("to-order")
+    public ResponseEntity<ExistentProductsRecord> existProduct(@RequestBody ProductQuantityRecord quantityRecord) throws ProductException {
+        ExistentProductsRecord product = productService.getOneAvailableProduct(quantityRecord);
+        return new ResponseEntity<ExistentProductsRecord>(product, HttpStatus.OK);
     }
 
 

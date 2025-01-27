@@ -39,24 +39,9 @@ public class UserController {
      * @response 404 NOT FOUND - If the user is not found.
      */
     @GetMapping("/email/{email}")
-    public ResponseEntity<Long> getUserByEmail(@PathVariable String email) throws UserException {
+    public ResponseEntity<Long> getIdByEmail(@PathVariable String email) throws UserException {
         UserRecord user = userService.getUserByEmail(email);
         return ResponseEntity.ok(user.id());
-    }
-
-    /**
-     * Create a new user.
-     * @param newUserRecord The {@link NewUserRecord} containing the user's details.
-     * @return A {@link ResponseEntity} containing the created {@link UserRecord}.
-     * @throws UserException If the user cannot be created.
-     * @response 200 OK - The created user.
-     * @response 400 BAD GATEWAY - if the input data its invalid
-     * @response 409 BAD GATEWAY - if the email already exists
-     */
-    @PostMapping
-    public ResponseEntity<UserRecord> createUser(@RequestBody NewUserRecord newUserRecord) throws UserException {
-        UserRecord user = userService.createUser(newUserRecord);
-        return ResponseEntity.ok(user);
     }
 
     /**

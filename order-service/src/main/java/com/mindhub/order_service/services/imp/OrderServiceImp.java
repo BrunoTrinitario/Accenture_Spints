@@ -30,6 +30,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.mindhub.order_service.util.Constants.ORDER_COMPLETED;
 import static java.util.stream.Collectors.toList;
 
 @Service
@@ -88,9 +89,7 @@ public class OrderServiceImp implements OrderService, OrderItemService {
                 orderRepository.save(order);
 
                 List<ErrorProductRecord> errorList = generateErrorProductList(newOrder.recordList(), responseEntity.getBody());
-
                 OrderDTO orderDTO = new OrderDTO(order);
-
                 OrderCreatedRecord orderCreatedRecord = new OrderCreatedRecord(orderDTO, errorList);
 
                 return orderCreatedRecord;
@@ -111,7 +110,6 @@ public class OrderServiceImp implements OrderService, OrderItemService {
             }else{
                 throw new OrderException(Constants.COM_USR_PROD, HttpStatus.INTERNAL_SERVER_ERROR);
             }
-
         }
     }
 
@@ -180,16 +178,28 @@ public class OrderServiceImp implements OrderService, OrderItemService {
     }
 
     @Override
-    public OrderItemRecord addOrderItem(NewOrderItemRecord newOrderItem) throws OrderException, OrderItemException {
-        OrderEntity order = orderRepository.findById(newOrderItem.orderId()).orElseThrow(() -> new OrderException(Constants.ORDER_NOT_FOUND, HttpStatus.NOT_FOUND));
-        validateOrderItem(newOrderItem.orderId(),newOrderItem.productId());
-        if (newOrderItem.quantity()<0 || newOrderItem.quantity()==null){
+    public OrderItemRecord addOrderItem(Long OrderId, ProductQuantityRecord productQuantityRecord) throws OrderException, OrderItemException {
+        OrderEntity order = orderRepository.findById(OrderId).orElseThrow(() -> new OrderException(Constants.ORDER_NOT_FOUND, HttpStatus.NOT_FOUND));
+        validOrder(order.getId());
+        validateOrderItem(order.getId(),productQuantityRecord.id());
+        if (productQuantityRecord.quantity()==null || productQuantityRecord.quantity()<0){
             throw new OrderItemException(Constants.INV_QUANTITY);
         }
-        OrderItem orderItem = new OrderItem(newOrderItem.quantity(), order, newOrderItem.productId());
-        order.addOrderItem(orderItem);
-        order = orderRepository.save(order);
-        return new OrderItemRecord(orderItem.getId(),orderItem.getProductId(),orderItem.getQuantity());
+
+        ParameterizedTypeReference<ExistentProductsRecord> responseType = new ParameterizedTypeReference<>() {};
+        HttpEntity<ProductQuantityRecord> httpEntity = new HttpEntity<>(productQuantityRecord);
+        try{
+            ResponseEntity<ExistentProductsRecord> responseEntity = restTemplate.exchange(productPath + "/to-order", HttpMethod.PUT ,httpEntity, responseType);
+            ExistentProductsRecord existentProduct = responseEntity.getBody();
+            OrderItem orderItem = new OrderItem(productQuantityRecord.quantity(), order, existentProduct.id());
+            orderItem = orderItemRepository.save(orderItem);
+            order.addOrderItem(orderItem);
+            orderRepository.save(order);
+            return new OrderItemRecord(orderItem.getId(), productQuantityRecord.id(), productQuantityRecord.quantity());
+        }catch (RestClientException e){
+            throw new OrderException(Constants.COM_USR_PROD, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
     }
 
     private void validateOrderItem(Long orderId,Long orderItemProductId) throws OrderException {
@@ -203,18 +213,16 @@ public class OrderServiceImp implements OrderService, OrderItemService {
     }
 
     @Override
-    public void deleteOrderItem(Long id) throws OrderItemException {
-        if (existsOrderItem(id)){
-            orderItemRepository.deleteById(id);
-        }else{
-            throw new OrderItemException(Constants.ORDER_ITEM_NOT_FOUND, HttpStatus.NOT_FOUND);
-        }
-
+    public void deleteOrderItem(Long id) throws OrderItemException, OrderException {
+        OrderItem orderItem = orderItemRepository.findById(id).orElseThrow(()->new OrderItemException(Constants.ORDER_ITEM_NOT_FOUND, HttpStatus.NOT_FOUND));
+        validOrder(orderItem.getOrder().getId());
+        orderItemRepository.deleteById(id);
     }
 
     @Override
-    public OrderItemRecord updateOrderItem(Long id, Integer quantity) throws OrderItemException {
+    public OrderItemRecord updateOrderItem(Long id, Integer quantity) throws OrderItemException, OrderException {
         OrderItem orderItem = orderItemRepository.findById(id).orElseThrow(()->new OrderItemException(Constants.ORDER_ITEM_NOT_FOUND, HttpStatus.NOT_FOUND));
+        validOrder(orderItem.getOrder().getId());
         orderItem.setQuantity(quantity);
         orderItem = orderItemRepository.save(orderItem);
         return new OrderItemRecord(orderItem.getId(),orderItem.getProductId(),orderItem.getQuantity());
@@ -223,5 +231,12 @@ public class OrderServiceImp implements OrderService, OrderItemService {
     @Override
     public boolean existsOrderItem(Long id) {
         return orderItemRepository.existsById(id);
+    }
+
+    private void validOrder(Long id) throws OrderException {
+        OrderDTO order = getOrderById(id);
+        if (order.getOrderStatus()==OrderStatus.COMPLETED){
+            throw new OrderException(Constants.ORDER_COMPLETED,HttpStatus.UNAUTHORIZED);
+        }
     }
 }

@@ -3,10 +3,10 @@ package com.mindhub.product_service.Services.imp;
 import com.mindhub.product_service.Repositories.ProductRepository;
 import com.mindhub.product_service.Services.ProductService;
 import com.mindhub.product_service.exceptions.ProductException;
-import com.mindhub.product_service.models.ExistentProductsRecord;
-import com.mindhub.product_service.models.NewProduct;
+import com.mindhub.product_service.dtos.ExistentProductsRecord;
+import com.mindhub.product_service.dtos.NewProduct;
 import com.mindhub.product_service.models.Product;
-import com.mindhub.product_service.models.ProductQuantityRecord;
+import com.mindhub.product_service.dtos.ProductQuantityRecord;
 import com.mindhub.product_service.util.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -23,9 +23,9 @@ public class ProductServiceImp implements ProductService {
     private ProductRepository productRepository;
 
     @Override
-    public Set<Product> getAllProducts() {
+    public Set<ExistentProductsRecord> getAllProducts() {
         List<Product> productList = productRepository.findAll();
-        Set<Product> productSet = productList.stream().map(product -> product).collect(Collectors.toSet());
+        Set<ExistentProductsRecord> productSet = productList.stream().map(product -> new ExistentProductsRecord(product.getId(),product.getPrice(),product.getStock())).collect(Collectors.toSet());
         return productSet;
     }
 
@@ -46,7 +46,7 @@ public class ProductServiceImp implements ProductService {
     }
 
     @Override
-    public Product updateProduct(Long id, NewProduct newProduct) throws ProductException {
+    public ExistentProductsRecord updateProduct(Long id, NewProduct newProduct) throws ProductException {
         validatePrice(newProduct.price());
         validateStock(newProduct.stock());
         Product product = productRepository.findById(id).orElseThrow(()->new ProductException(Constants.PRODUCT_NOT_FOUND, HttpStatus.NOT_FOUND));
@@ -65,7 +65,7 @@ public class ProductServiceImp implements ProductService {
         }
         product = productRepository.save(product);
 
-        return product;
+        return new ExistentProductsRecord(product.getId(), product.getPrice(), product.getStock());
     }
 
     @Override
@@ -98,23 +98,29 @@ public class ProductServiceImp implements ProductService {
         List<ExistentProductsRecord> listOfProducts = new ArrayList<>();
 
         productQuantityRecordList.forEach( product -> {
-            if (existsProductById(product.id())){
-
-                try {
-                    Product realProduct = getProductById(product.id());
-                    if (realProduct.getStock()>=product.quantity()){
-                        listOfProducts.add(new ExistentProductsRecord(product.id(), realProduct.getPrice(), product.quantity()));
-                        realProduct.setStock(realProduct.getStock() - product.quantity());
-                        productRepository.save(realProduct);
-                    }else{
-                        listOfProducts.add(new ExistentProductsRecord(product.id(), null, product.quantity()));
-                    }
-                } catch (ProductException e) {}
-
-            }
+            ExistentProductsRecord aux = getOneAvailableProduct(product);
+            if (aux!=null)
+                listOfProducts.add(aux);
         });
 
         return listOfProducts;
+    }
+
+    @Override
+    public ExistentProductsRecord getOneAvailableProduct(ProductQuantityRecord quantityRecord){
+        try {
+            Product product = getProductById(quantityRecord.id());
+            System.out.println(product.getName());
+            if (product.getStock()>= quantityRecord.quantity()){
+                product.setStock(product.getStock()-quantityRecord.quantity());
+                productRepository.save(product);
+                return new ExistentProductsRecord(product.getId(), product.getPrice(), quantityRecord.quantity());
+            }else{
+                return new ExistentProductsRecord(product.getId(), null, quantityRecord.quantity());
+            }
+        } catch (ProductException e) {
+            return null;
+        }
     }
 
     private void validateName(String name) throws ProductException {

@@ -5,7 +5,6 @@ import com.mindhub.user_service.dtos.UpdateUserRecord;
 import com.mindhub.user_service.dtos.UserRecord;
 import com.mindhub.user_service.exceptions.UserException;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 import java.util.Set;
 
@@ -32,4 +31,5 @@ public interface UserService {
     boolean existUserByEmail(String email) throws UserException;
 
     Long getIdByEmail(String email) throws UserException;
+
 }

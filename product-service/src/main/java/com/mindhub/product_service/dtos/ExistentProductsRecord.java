@@ -1,4 +1,4 @@
-package com.mindhub.product_service.models;
+package com.mindhub.product_service.dtos;
 
 public record ExistentProductsRecord(Long id, Double price, Integer quantity) {
 }

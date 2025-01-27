@@ -2,6 +2,7 @@ package com.mindhub.order_service.controllers;
 
 import com.mindhub.order_service.dtos.NewOrderItemRecord;
 import com.mindhub.order_service.dtos.OrderItemRecord;
+import com.mindhub.order_service.dtos.ProductQuantityRecord;
 import com.mindhub.order_service.dtos.UpdateOrderItemRecord;
 import com.mindhub.order_service.exceptions.OrderException;
 import com.mindhub.order_service.exceptions.OrderItemException;
@@ -40,10 +41,10 @@ public class OrderItemController {
      * @throws OrderItemException If there is an issue with the new order item (e.g., invalid product ID).
      * @response 201 Created - Order item successfully added.
      */
-    @PostMapping
-    public ResponseEntity<Void> addOrderItem(@RequestBody NewOrderItemRecord newOrderItem) throws OrderException, OrderItemException {
-        orderItemService.addOrderItem(newOrderItem);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    @PostMapping("/{orderId}")
+    public ResponseEntity<OrderItemRecord> addOrderItem(@PathVariable Long orderId,@RequestBody ProductQuantityRecord newOrderItem) throws OrderException, OrderItemException {
+        OrderItemRecord orderItemRecord = orderItemService.addOrderItem(orderId, newOrderItem);
+        return ResponseEntity.status(HttpStatus.CREATED).body(orderItemRecord);
     }
 
     /**
@@ -59,17 +60,17 @@ public class OrderItemController {
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Update an order item's quantity.
-     * @param orderItemId The ID of the order item to update.
-     * @param updateOrderItemRecord An object containing the updated quantity for the order item.
-     * @return The updated {@link OrderItemRecord}.
-     * @throws OrderItemException If the order item does not exist or the quantity is invalid.
-     * @response 200 OK - Order item successfully updated.
-     */
-    @PutMapping("/{orderItemId}")
-    public ResponseEntity<OrderItemRecord> updateOrderItem(@PathVariable Long orderItemId, @RequestBody UpdateOrderItemRecord updateOrderItemRecord) throws OrderItemException {
-        OrderItemRecord orderItems = orderItemService.updateOrderItem(orderItemId, updateOrderItemRecord.quantity());
-        return ResponseEntity.ok(orderItems);
-    }
+    ///**
+    // * Update an order item's quantity.
+    // * @param orderItemId The ID of the order item to update.
+    // * @param updateOrderItemRecord An object containing the updated quantity for the order item.
+    // * @return The updated {@link OrderItemRecord}.
+    // * @throws OrderItemException If the order item does not exist or the quantity is invalid.
+    // * @response 200 OK - Order item successfully updated.
+    // */
+    //@PutMapping("/{orderItemId}")
+    //public ResponseEntity<OrderItemRecord> updateOrderItem(@PathVariable Long orderItemId, @RequestBody UpdateOrderItemRecord updateOrderItemRecord) throws OrderItemException {
+    //    OrderItemRecord orderItems = orderItemService.updateOrderItem(orderItemId, updateOrderItemRecord.quantity());
+    //    return ResponseEntity.ok(orderItems);
+    //}
 }

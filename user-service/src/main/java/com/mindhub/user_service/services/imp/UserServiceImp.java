@@ -126,7 +126,20 @@ public class UserServiceImp implements UserService {
     private void validateEmail(String email) throws UserException {
         if (existUserByEmail(email)){
             throw new UserException(Constants.EXIST_EMAIL,HttpStatus.CONFLICT);
+        }else{
+            if (!validMail(email)){
+                throw new UserException(Constants.INV_EMAIL,HttpStatus.CONFLICT);
+            }
         }
+    }
+
+    public boolean validMail(String email){
+        for (String dom : Constants.URL_MAILS) {
+            if (email.endsWith(dom)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

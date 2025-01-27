@@ -5,5 +5,13 @@ public class Constants {
     public static final String EMPTY_PASS="The password its empty";
     public static final String EMPTY_US="The username its empty";
     public static final String EXIST_EMAIL="The email already exists";
+    public static final String INV_EMAIL="The email its invalid";
+    public static final String UNAVAILABLE_ORDER_SERVICE="The order service its unavailable";
+    public static final String UNAVAILABLE_PRODUCT_SERVICE="The order service its unavailable";
+    public static final String PDT_NOT_FOUND = "The product doesn't exists";
+    public static final String SUC_DEL_USER = "Successful deleted user";
+    public static final String SUC_DEL_ORDER = "Successful deleted order";
+    public static final String SUC_DEL_PDT = "Successful deleted product";
+    public static final String[] URL_MAILS = {"@hotmail.com","outlook.com","gmail.com"};
 
 }
