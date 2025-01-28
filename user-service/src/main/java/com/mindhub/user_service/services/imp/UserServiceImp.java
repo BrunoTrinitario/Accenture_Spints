@@ -1,5 +1,7 @@
 package com.mindhub.user_service.services.imp;
 
+import com.mindhub.user_service.config.RabbitMQConfig;
+import com.mindhub.user_service.dtos.EmailEvent;
 import com.mindhub.user_service.dtos.NewUserRecord;
 import com.mindhub.user_service.dtos.UpdateUserRecord;
 import com.mindhub.user_service.dtos.UserRecord;
@@ -9,6 +11,7 @@ import com.mindhub.user_service.models.UserRol;
 import com.mindhub.user_service.repositories.UserRepository;
 import com.mindhub.user_service.services.UserService;
 import com.mindhub.user_service.util.Constants;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -21,6 +24,8 @@ import java.util.stream.Collectors;
 public class UserServiceImp implements UserService {
     @Autowired
     UserRepository userRepository;
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
     @Override
     public Set<UserRecord> getAllUsers() {
@@ -51,6 +56,7 @@ public class UserServiceImp implements UserService {
         UserEntity userEntity = new UserEntity(newUserRecord.username(), newUserRecord.password(), newUserRecord.email(), UserRol.USER);
         userEntity = userRepository.save(userEntity);
         UserRecord userRecord = new UserRecord(userEntity.getId(), userEntity.getUsername(),userEntity.getEmail(),userEntity.getUserRol());
+        sendRegistrationEmail(userEntity);
         return userRecord;
     }
 
@@ -62,7 +68,13 @@ public class UserServiceImp implements UserService {
         UserEntity userEntity = new UserEntity(newUserRecord.username(), newUserRecord.password(), newUserRecord.email(), UserRol.ADMIN);
         userEntity = userRepository.save(userEntity);
         UserRecord userRecord = new UserRecord(userEntity.getId(), userEntity.getUsername(),userEntity.getEmail(),userEntity.getUserRol());
+        sendRegistrationEmail(userEntity);
         return userRecord;
+    }
+
+    private void sendRegistrationEmail(UserEntity userEntity){
+        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, "user.email",
+                new EmailEvent(userEntity.getEmail(), Constants.SUC_REG,Constants.BODY_MAIL+userEntity.getUsername()));
     }
 
     @Override

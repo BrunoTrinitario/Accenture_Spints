@@ -1,5 +1,6 @@
 package com.mindhub.product_service.Services;
 
+import com.mindhub.product_service.dtos.ProductRecord;
 import com.mindhub.product_service.exceptions.ProductException;
 import com.mindhub.product_service.dtos.ExistentProductsRecord;
 import com.mindhub.product_service.dtos.NewProduct;
@@ -15,6 +16,7 @@ import java.util.Set;
 public interface ProductService {
     Set<ExistentProductsRecord> getAllProducts();
     Product getProductById(Long id) throws ProductException;
+    ProductRecord getDataProductById(Long id) throws ProductException;
     Product createProduct(NewProduct newProduct) throws ProductException;
     ExistentProductsRecord updateProduct(Long id, NewProduct newProduct) throws ProductException;
     void deleteProductById(Long id) throws ProductException;

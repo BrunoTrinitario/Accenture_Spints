@@ -2,6 +2,7 @@ package com.mindhub.product_service.Services.imp;
 
 import com.mindhub.product_service.Repositories.ProductRepository;
 import com.mindhub.product_service.Services.ProductService;
+import com.mindhub.product_service.dtos.ProductRecord;
 import com.mindhub.product_service.exceptions.ProductException;
 import com.mindhub.product_service.dtos.ExistentProductsRecord;
 import com.mindhub.product_service.dtos.NewProduct;
@@ -26,7 +27,7 @@ public class ProductServiceImp implements ProductService {
     @Override
     public Set<ExistentProductsRecord> getAllProducts() {
         List<Product> productList = productRepository.findAll();
-        Set<ExistentProductsRecord> productSet = productList.stream().map(product -> new ExistentProductsRecord(product.getId(),product.getPrice(),product.getStock())).collect(Collectors.toSet());
+        Set<ExistentProductsRecord> productSet = productList.stream().map(product -> new ExistentProductsRecord(product.getId(), product.getPrice(), product.getStock())).collect(Collectors.toSet());
         return productSet;
     }
 
@@ -34,6 +35,11 @@ public class ProductServiceImp implements ProductService {
     public Product getProductById(Long id) throws ProductException {
         Product product = productRepository.findById(id).orElseThrow(()->new ProductException(Constants.PRODUCT_NOT_FOUND, HttpStatus.NOT_FOUND));
         return product;
+    }
+
+    public ProductRecord getDataProductById(Long id) throws ProductException {
+        Product product = getProductById(id);
+        return new ProductRecord(product.getId(),product.getName(), product.getDescription(), product.getPrice(), product.getStock());
     }
 
     @Override
@@ -66,7 +72,7 @@ public class ProductServiceImp implements ProductService {
         }
         product = productRepository.save(product);
 
-        return new ExistentProductsRecord(product.getId(), product.getPrice(), product.getStock());
+        return new ExistentProductsRecord(product.getId(),product.getPrice(), product.getStock());
     }
 
     @Override
@@ -116,9 +122,9 @@ public class ProductServiceImp implements ProductService {
             if (product.getStock()>= quantityRecord.quantity()){
                 product.setStock(product.getStock()-quantityRecord.quantity());
                 productRepository.save(product);
-                return new ExistentProductsRecord(product.getId(), product.getPrice(), quantityRecord.quantity());
+                return new ExistentProductsRecord(product.getId(),product.getPrice(), quantityRecord.quantity());
             }else{
-                return new ExistentProductsRecord(product.getId(), null, quantityRecord.quantity());
+                return new ExistentProductsRecord(product.getId(),null, quantityRecord.quantity());
             }
         } catch (ProductException e) {
             return null;

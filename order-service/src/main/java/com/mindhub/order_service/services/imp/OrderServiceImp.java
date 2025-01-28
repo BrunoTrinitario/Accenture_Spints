@@ -13,6 +13,7 @@ import com.mindhub.order_service.services.OrderItemService;
 import com.mindhub.order_service.services.OrderService;
 import com.mindhub.order_service.util.Constants;
 import org.aspectj.weaver.ast.Or;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -39,6 +40,9 @@ public class OrderServiceImp implements OrderService, OrderItemService {
 
     @Autowired
     private RestTemplate restTemplate;
+
+    @Autowired
+    RabbitTemplate rabbitTemplate;
 
     @Value("${USERS_PATH}")
     private String userPath;
@@ -163,7 +167,25 @@ public class OrderServiceImp implements OrderService, OrderItemService {
         OrderEntity order = orderRepository.findById(id).orElseThrow(() -> new OrderException(Constants.ORDER_NOT_FOUND, HttpStatus.NOT_FOUND));
         order.setOrderStatus(orderStatus);
         order = orderRepository.save(order);
+        if (order.getOrderStatus() == OrderStatus.COMPLETED){
+            sendDataToGeneratePdf(order);
+        }
         return new OrderDTO(order);
+    }
+
+    private void sendDataToGeneratePdf(OrderEntity order){
+        List<ProductRecord> listProducts = new ArrayList<>();
+        for (OrderItem item : order.getOrderItemList()){
+            try {
+                ProductRecord product = restTemplate.getForObject(productPath + "/" + item.getProductId(), ProductRecord.class );
+                listProducts.add(product);
+            }catch (RestClientException e){
+
+            }
+
+        }
+        OrderToPdfDTO orderToPdfDTO = new OrderToPdfDTO(order.getId(), order.getUserId(), "brunotrinitario@gmail.com", listProducts);
+        rabbitTemplate.convertAndSend("email-exchange", "user.pdf", orderToPdfDTO);
     }
 
     @Override

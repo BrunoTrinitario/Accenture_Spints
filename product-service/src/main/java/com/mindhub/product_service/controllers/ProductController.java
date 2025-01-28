@@ -1,6 +1,7 @@
 package com.mindhub.product_service.controllers;
 
 import com.mindhub.product_service.Services.ProductService;
+import com.mindhub.product_service.dtos.ProductRecord;
 import com.mindhub.product_service.exceptions.ProductException;
 import com.mindhub.product_service.dtos.ExistentProductsRecord;
 import com.mindhub.product_service.dtos.NewProduct;
@@ -42,8 +43,8 @@ public class ProductController {
      * @response 404 NOT FOUND - If the product is not found.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable Long id) throws ProductException {
-        Product product = productService.getProductById(id);
+    public ResponseEntity<ProductRecord> getProductById(@PathVariable Long id) throws ProductException {
+        ProductRecord product = productService.getDataProductById(id);
         return ResponseEntity.ok(product);
     }
     /**
