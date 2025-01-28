@@ -60,17 +60,17 @@ public class OrderItemController {
         return ResponseEntity.noContent().build();
     }
 
-    ///**
-    // * Update an order item's quantity.
-    // * @param orderItemId The ID of the order item to update.
-    // * @param updateOrderItemRecord An object containing the updated quantity for the order item.
-    // * @return The updated {@link OrderItemRecord}.
-    // * @throws OrderItemException If the order item does not exist or the quantity is invalid.
-    // * @response 200 OK - Order item successfully updated.
-    // */
-    //@PutMapping("/{orderItemId}")
-    //public ResponseEntity<OrderItemRecord> updateOrderItem(@PathVariable Long orderItemId, @RequestBody UpdateOrderItemRecord updateOrderItemRecord) throws OrderItemException {
-    //    OrderItemRecord orderItems = orderItemService.updateOrderItem(orderItemId, updateOrderItemRecord.quantity());
-    //    return ResponseEntity.ok(orderItems);
-    //}
+    /**
+     * Update an order item's quantity.
+     * @param orderItemId The ID of the order item to update.
+     * @param updateOrderItemRecord An object containing the updated quantity for the order item.
+     * @return The updated {@link OrderItemRecord}.
+     * @throws OrderItemException If the order item does not exist or the quantity is invalid.
+     * @response 200 OK - Order item successfully updated.
+     */
+    @PutMapping("/{orderItemId}")
+    public ResponseEntity<OrderItemRecord> updateOrderItem(@PathVariable Long orderItemId, @RequestBody UpdateOrderItemRecord updateOrderItemRecord) throws OrderItemException, OrderException {
+        OrderItemRecord orderItems = orderItemService.updateOrderItemQuantity(orderItemId, updateOrderItemRecord.quantity());
+        return ResponseEntity.ok(orderItems);
+    }
 }

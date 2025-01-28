@@ -9,4 +9,7 @@ public class Constants {
     public static final String COM_ERR_PROD = "Error communicating with product-service";
     public static final String COM_USR_PROD = "Error communicating with user-service";
     public static final String ORDER_COMPLETED = "The order must be pending to update the order item";
+    public static final String USER_NOT_FOUND= "The user doesn't exists";
+    public static final String PRODUCT_NOT_FOUND= "The product doesn't exists";
+    public static final String NEGATIVE_STOCK = "Not enough stock";
 }

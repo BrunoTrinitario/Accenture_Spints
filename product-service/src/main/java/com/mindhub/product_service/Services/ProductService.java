@@ -7,6 +7,7 @@ import com.mindhub.product_service.models.Product;
 import com.mindhub.product_service.dtos.ProductQuantityRecord;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -20,6 +21,8 @@ public interface ProductService {
     boolean existsProductById(Long id);
     boolean existsProductByName(String name);
     Long getIdByName(String name) throws ProductException;
-    List<ExistentProductsRecord> getAllAvailableProducts(List<ProductQuantityRecord> productQuantityRecordList);
+    HashMap<Long, Integer> getAllAvailableProducts(List<ProductQuantityRecord> productQuantityRecordList);
     ExistentProductsRecord getOneAvailableProduct(ProductQuantityRecord quantityRecord) throws ProductException;
+    public void updateProductsQuantity(List<ProductQuantityRecord> quantityRecord);
+    void updateProductQuantity(Long idProduct, Integer quantity) throws ProductException;
 }

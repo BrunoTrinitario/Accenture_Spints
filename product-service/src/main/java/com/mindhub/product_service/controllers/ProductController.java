@@ -6,11 +6,13 @@ import com.mindhub.product_service.dtos.ExistentProductsRecord;
 import com.mindhub.product_service.dtos.NewProduct;
 import com.mindhub.product_service.models.Product;
 import com.mindhub.product_service.dtos.ProductQuantityRecord;
+import com.mindhub.product_service.util.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -88,15 +90,15 @@ public class ProductController {
     }
 
     @PutMapping
-    public ResponseEntity<List<ExistentProductsRecord>> existsProducts(@RequestBody List<ProductQuantityRecord> recordList){
-        List<ExistentProductsRecord> products = productService.getAllAvailableProducts(recordList);
+    public ResponseEntity<HashMap<Long, Integer>> existsProducts(@RequestBody List<ProductQuantityRecord> recordList){
+        HashMap<Long, Integer> products = productService.getAllAvailableProducts(recordList);
         return ResponseEntity.ok(products);
     }
 
     @PutMapping("to-order")
-    public ResponseEntity<ExistentProductsRecord> existProduct(@RequestBody ProductQuantityRecord quantityRecord) throws ProductException {
-        ExistentProductsRecord product = productService.getOneAvailableProduct(quantityRecord);
-        return new ResponseEntity<ExistentProductsRecord>(product, HttpStatus.OK);
+    public ResponseEntity<String> existProduct(@RequestBody List<ProductQuantityRecord> quantityRecord) throws ProductException {
+        productService.updateProductsQuantity(quantityRecord);
+        return new ResponseEntity<String>(Constants.UPDATED_PDT, HttpStatus.OK);
     }
 
 

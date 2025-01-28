@@ -12,7 +12,6 @@ import com.mindhub.order_service.repositories.OrderRepository;
 import com.mindhub.order_service.services.OrderItemService;
 import com.mindhub.order_service.services.OrderService;
 import com.mindhub.order_service.util.Constants;
-import com.mindhub.order_service.util.RestTemplateConfig;
 import org.aspectj.weaver.ast.Or;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,16 +21,12 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static com.mindhub.order_service.util.Constants.ORDER_COMPLETED;
-import static java.util.stream.Collectors.toList;
 
 @Service
 public class OrderServiceImp implements OrderService, OrderItemService {
@@ -74,28 +69,78 @@ public class OrderServiceImp implements OrderService, OrderItemService {
 
     @Override
     public OrderCreatedRecord createOrder(NewOrderRecord newOrder) throws OrderException {
-
             Long userId = getUserIdFromEmail(newOrder.email());
 
-            ParameterizedTypeReference<List<ExistentProductsRecord>> responseType =
-                    new ParameterizedTypeReference<>() {};
-            HttpEntity<List<ProductQuantityRecord>> httpEntity = new HttpEntity<>(newOrder.recordList());
+            HashMap<Long,Integer> existentProductMap = getExistentProducts(newOrder.recordList());
 
-            try{
-                ResponseEntity<List<ExistentProductsRecord>> responseEntity = restTemplate.exchange(productPath, HttpMethod.PUT ,httpEntity, responseType);
-                OrderEntity order = new OrderEntity(null, userId, OrderStatus.PENDING);
-                orderRepository.save(order);
-                generateOrderItemList(responseEntity.getBody(), order);
-                orderRepository.save(order);
+            OrderEntity order = new OrderEntity(null, userId, OrderStatus.PENDING);
 
-                List<ErrorProductRecord> errorList = generateErrorProductList(newOrder.recordList(), responseEntity.getBody());
-                OrderDTO orderDTO = new OrderDTO(order);
-                OrderCreatedRecord orderCreatedRecord = new OrderCreatedRecord(orderDTO, errorList);
+            orderRepository.save(order);
 
-                return orderCreatedRecord;
-            }catch (HttpClientErrorException e){
-                throw new OrderException(Constants.COM_ERR_PROD, HttpStatus.INTERNAL_SERVER_ERROR);
+            List<ErrorProductRecord> orderItemsError = setOrderItemList(existentProductMap, newOrder.recordList(), order);
+
+            updateProducts(order.getOrderItemList(),-1);
+
+            orderRepository.save(order);
+
+            OrderDTO orderDTO = new OrderDTO(order);
+            OrderCreatedRecord orderCreatedRecord = new OrderCreatedRecord(orderDTO, orderItemsError);
+
+            return orderCreatedRecord;
+
+    }
+
+    private HashMap<Long,Integer> getExistentProducts(List<ProductQuantityRecord> productQuantityRecordList) throws OrderException {
+        ParameterizedTypeReference<HashMap<Long, Integer>> responseType =
+                new ParameterizedTypeReference<>() {};
+        HttpEntity<List<ProductQuantityRecord>> httpEntity = new HttpEntity<>(productQuantityRecordList);
+        try{
+            ResponseEntity<HashMap<Long, Integer>> responseEntity = restTemplate.exchange(productPath, HttpMethod.PUT ,httpEntity, responseType);
+            return responseEntity.getBody();
+        } catch (RestClientException e) {
+            throw new OrderException(Constants.COM_ERR_PROD, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+    }
+
+    private List<ErrorProductRecord> setOrderItemList(HashMap<Long, Integer> existentProducts, List<ProductQuantityRecord> wantedProducts, OrderEntity order){
+        List<OrderItem> orderItemList = new ArrayList<>();
+        List<ErrorProductRecord> errorProductList = new ArrayList<>();
+        wantedProducts.forEach(wantedProduct -> {
+            if (existentProducts.containsKey(wantedProduct.id())){
+               Integer realQuantity = existentProducts.get(wantedProduct.id());
+               if (realQuantity>= wantedProduct.quantity()){
+                   OrderItem orderItem = new OrderItem(wantedProduct.quantity(), order, wantedProduct.id());
+                   orderItemRepository.save(orderItem);
+                   orderItemList.add(orderItem);
+               }else{
+                   errorProductList.add(new ErrorProductRecord(wantedProduct.id(), ProductError.NO_STOCK));
+               }
+            }else{
+                errorProductList.add(new ErrorProductRecord(wantedProduct.id(), ProductError.NOT_FOUND));
             }
+        });
+
+        order.setOrderItemList(orderItemList);
+
+        return errorProductList;
+    }
+
+    private void updateProducts(List<OrderItem> orderItemList, int factor) throws OrderException {
+
+        List<ProductQuantityRecord> productQuantityRecordList = new ArrayList<>();
+        orderItemList.forEach(orderItem -> {
+            productQuantityRecordList.add(new ProductQuantityRecord(orderItem.getProductId(), factor*orderItem.getQuantity()));
+        });
+
+        HttpEntity<List<ProductQuantityRecord>> httpEntity = new HttpEntity<>(productQuantityRecordList);
+
+        try{
+            restTemplate.exchange(productPath + "/to-order", HttpMethod.PUT ,httpEntity, String.class);
+        } catch (RestClientException e) {
+            throw new OrderException(Constants.COM_ERR_PROD, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
     }
 
     private Long getUserIdFromEmail(String email) throws OrderException {
@@ -106,46 +151,11 @@ public class OrderServiceImp implements OrderService, OrderItemService {
         } catch (RestClientException e) {
             if (e instanceof HttpStatusCodeException){
                 HttpStatusCodeException aux = (HttpStatusCodeException)e;
-                throw new OrderException(Constants.COM_ERR_PROD, (HttpStatus) aux.getStatusCode());
+                throw new OrderException(Constants.USER_NOT_FOUND, (HttpStatus) aux.getStatusCode());
             }else{
                 throw new OrderException(Constants.COM_USR_PROD, HttpStatus.INTERNAL_SERVER_ERROR);
             }
         }
-    }
-
-    private List<ErrorProductRecord> generateErrorProductList(List<ProductQuantityRecord> userProductsList,List<ExistentProductsRecord> existentProductsList){
-        List<ErrorProductRecord> errorProductList = new ArrayList<>();
-        List<ProductQuantityRecord> aux = userProductsList.stream()
-                .filter(userProduct ->
-                        !existentProductsList.stream().anyMatch(availableProduct ->
-                                availableProduct.id().equals(userProduct.id()) && availableProduct.price() != null)
-                ).toList();
-
-        aux.forEach(product -> {
-            boolean productExists = existentProductsList.stream()
-                        .anyMatch(p -> p.id().equals(product.id()));
-               if (productExists) {
-                   errorProductList.add(new ErrorProductRecord(product.id(), ProductError.NO_STOCK));
-               } else {
-                   errorProductList.add(new ErrorProductRecord(product.id(), ProductError.NOT_FOUND));
-               }
-        });
-
-        return  errorProductList;
-    }
-
-    private void generateOrderItemList(List<ExistentProductsRecord> productQuantityList, OrderEntity order){
-        List<OrderItem> orderItemList = new ArrayList<>();
-        Iterator<ExistentProductsRecord> it = productQuantityList.iterator();
-        while (it.hasNext()){
-            ExistentProductsRecord aux = it.next();
-            if (aux.price()!=null){
-                OrderItem orderItem = new OrderItem(aux.quantity(),order, aux.id());
-                orderItemRepository.save(orderItem);
-                orderItemList.add(orderItem);
-            }
-        }
-        order.setOrderItemList(orderItemList);
     }
 
     @Override
@@ -180,24 +190,36 @@ public class OrderServiceImp implements OrderService, OrderItemService {
     @Override
     public OrderItemRecord addOrderItem(Long OrderId, ProductQuantityRecord productQuantityRecord) throws OrderException, OrderItemException {
         OrderEntity order = orderRepository.findById(OrderId).orElseThrow(() -> new OrderException(Constants.ORDER_NOT_FOUND, HttpStatus.NOT_FOUND));
-        validOrder(order.getId());
+        validOrderStatus(order.getId());
         validateOrderItem(order.getId(),productQuantityRecord.id());
         if (productQuantityRecord.quantity()==null || productQuantityRecord.quantity()<0){
             throw new OrderItemException(Constants.INV_QUANTITY);
         }
 
-        ParameterizedTypeReference<ExistentProductsRecord> responseType = new ParameterizedTypeReference<>() {};
-        HttpEntity<ProductQuantityRecord> httpEntity = new HttpEntity<>(productQuantityRecord);
-        try{
-            ResponseEntity<ExistentProductsRecord> responseEntity = restTemplate.exchange(productPath + "/to-order", HttpMethod.PUT ,httpEntity, responseType);
-            ExistentProductsRecord existentProduct = responseEntity.getBody();
-            OrderItem orderItem = new OrderItem(productQuantityRecord.quantity(), order, existentProduct.id());
-            orderItem = orderItemRepository.save(orderItem);
-            order.addOrderItem(orderItem);
-            orderRepository.save(order);
-            return new OrderItemRecord(orderItem.getId(), productQuantityRecord.id(), productQuantityRecord.quantity());
-        }catch (RestClientException e){
-            throw new OrderException(Constants.COM_USR_PROD, HttpStatus.INTERNAL_SERVER_ERROR);
+        List<ProductQuantityRecord> auxList = new ArrayList<>();
+        auxList.add(productQuantityRecord);
+
+        HashMap<Long, Integer> existentProductMap = getExistentProducts(auxList);
+
+        if (existentProductMap.containsKey(productQuantityRecord.id())){
+            Integer realQuantity = existentProductMap.get(productQuantityRecord.id());
+            if (realQuantity>= productQuantityRecord.quantity()){
+                OrderItem orderItem = new OrderItem(productQuantityRecord.quantity(), order, productQuantityRecord.id());
+
+                List<OrderItem> orderItemList = new ArrayList<>();
+                orderItemList.add(orderItem);
+                updateProducts(orderItemList,-1);
+
+                orderItemRepository.save(orderItem);
+                order.addOrderItem(orderItem);
+                orderRepository.save(order);
+
+                return new OrderItemRecord(order.getId(), orderItem.getProductId(), orderItem.getQuantity());
+            }else{
+                throw new OrderException(Constants.NEGATIVE_STOCK, HttpStatus.NOT_FOUND);
+            }
+        }else{
+            throw new OrderException(Constants.PRODUCT_NOT_FOUND, HttpStatus.NOT_FOUND);
         }
 
     }
@@ -215,17 +237,37 @@ public class OrderServiceImp implements OrderService, OrderItemService {
     @Override
     public void deleteOrderItem(Long id) throws OrderItemException, OrderException {
         OrderItem orderItem = orderItemRepository.findById(id).orElseThrow(()->new OrderItemException(Constants.ORDER_ITEM_NOT_FOUND, HttpStatus.NOT_FOUND));
-        validOrder(orderItem.getOrder().getId());
-        orderItemRepository.deleteById(id);
+        validOrderStatus(orderItem.getOrder().getId());
+
+        List<OrderItem> orderItemList = new ArrayList<>();
+        orderItemList.add(orderItem);
+
+        updateProducts(orderItemList,1);
+
+        orderItemRepository.delete(orderItem);
     }
 
     @Override
-    public OrderItemRecord updateOrderItem(Long id, Integer quantity) throws OrderItemException, OrderException {
+    public OrderItemRecord updateOrderItemQuantity(Long id, Integer quantity) throws OrderItemException, OrderException {
         OrderItem orderItem = orderItemRepository.findById(id).orElseThrow(()->new OrderItemException(Constants.ORDER_ITEM_NOT_FOUND, HttpStatus.NOT_FOUND));
-        validOrder(orderItem.getOrder().getId());
-        orderItem.setQuantity(quantity);
-        orderItem = orderItemRepository.save(orderItem);
-        return new OrderItemRecord(orderItem.getId(),orderItem.getProductId(),orderItem.getQuantity());
+        validOrderStatus(orderItem.getOrder().getId());
+
+        if (quantity>0 && orderItem.getQuantity() != quantity){
+            HashMap<Long, Integer> existentProduct = getExistentProducts(List.of(new ProductQuantityRecord(id,quantity)));
+
+            if (existentProduct.get(id)>=quantity){
+                int diference = orderItem.getQuantity()-quantity;
+                updateProducts(List.of(new OrderItem(diference,null,id)),1);
+                orderItem.setQuantity(quantity);
+                orderItem = orderItemRepository.save(orderItem);
+                return new OrderItemRecord(orderItem.getId(),orderItem.getProductId(),orderItem.getQuantity());
+            }else{
+                throw new OrderException(Constants.NEGATIVE_STOCK, HttpStatus.NOT_ACCEPTABLE);
+            }
+        }else{
+            throw new OrderException(Constants.INV_QUANTITY, HttpStatus.NOT_ACCEPTABLE);
+        }
+
     }
 
     @Override
@@ -233,7 +275,7 @@ public class OrderServiceImp implements OrderService, OrderItemService {
         return orderItemRepository.existsById(id);
     }
 
-    private void validOrder(Long id) throws OrderException {
+    private void validOrderStatus(Long id) throws OrderException {
         OrderDTO order = getOrderById(id);
         if (order.getOrderStatus()==OrderStatus.COMPLETED){
             throw new OrderException(Constants.ORDER_COMPLETED,HttpStatus.UNAUTHORIZED);

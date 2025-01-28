@@ -16,6 +16,6 @@ public interface OrderItemService {
     Set<OrderItemRecord> getAllOrderItemsByOrderId(Long id) throws OrderException;
     OrderItemRecord addOrderItem(Long orderId, ProductQuantityRecord productQuantityRecord) throws OrderException, OrderItemException;
     void deleteOrderItem(Long id) throws OrderException, OrderItemException;
-    OrderItemRecord updateOrderItem(Long id, Integer quantity) throws OrderItemException, OrderException;
+    OrderItemRecord updateOrderItemQuantity(Long id, Integer quantity) throws OrderItemException, OrderException;
     boolean existsOrderItem(Long id);
 }
