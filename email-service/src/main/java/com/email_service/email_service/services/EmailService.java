@@ -49,9 +49,7 @@ public class EmailService {
             byte[] pdfBytes = byteArrayOutputStream.toByteArray();
             document.close();
             System.out.println("se creo el pdf");
-
-
-            sendEmail(orderDTO.getUserMail(),pdfBytes,"document.pdf");
+            sendEmail(orderDTO.getUserMail(),pdfBytes,"document.pdf", orderDTO.getOrderId());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -73,12 +71,12 @@ public class EmailService {
         contentStream.close();
     }
 
-    private void sendEmail(String to, byte[] pdfBytes, String fileName) throws MessagingException {
+    private void sendEmail(String to, byte[] pdfBytes, String fileName, Long orderId) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
         helper.setTo(to);
-        helper.setSubject("Your Order Confirmation");
+        helper.setSubject("The order "+orderId+" was confirmed");
         helper.setText("Dear Customer,\n\nPlease find your order details attached.", false);
 
         helper.addAttachment(fileName, () -> new java.io.ByteArrayInputStream(pdfBytes));

@@ -184,7 +184,7 @@ public class OrderServiceImp implements OrderService, OrderItemService {
             }
 
         }
-        OrderToPdfDTO orderToPdfDTO = new OrderToPdfDTO(order.getId(), order.getUserId(), "brunotrinitario@gmail.com", listProducts);
+        OrderToPdfDTO orderToPdfDTO = new OrderToPdfDTO(order.getId(), order.getUserId(), "mail", listProducts);
         rabbitTemplate.convertAndSend("email-exchange", "user.pdf", orderToPdfDTO);
     }
 
