@@ -2,6 +2,8 @@ package com.mindhub.user_service.models;
 
 import jakarta.persistence.*;
 
+import java.util.UUID;
+
 @Entity
 public class UserEntity {
     @Id
@@ -18,6 +20,9 @@ public class UserEntity {
     private String password;
 
     private UserRole userRole;
+
+    private UserStatus userStatus = UserStatus.PENDING;
+
 
     public UserEntity() {
     }
@@ -64,4 +69,13 @@ public class UserEntity {
     public void setPassword(String password) {
         this.password = password;
     }
+
+    public UserStatus getUserStatus() {
+        return userStatus;
+    }
+
+    public void setUserStatus(UserStatus userStatus) {
+        this.userStatus = userStatus;
+    }
+
 }

@@ -1,9 +1,6 @@
 package com.mindhub.user_service.services;
 
-import com.mindhub.user_service.dtos.LoginUserRecord;
-import com.mindhub.user_service.dtos.NewUserRecord;
-import com.mindhub.user_service.dtos.UpdateUserRecord;
-import com.mindhub.user_service.dtos.UserRecord;
+import com.mindhub.user_service.dtos.*;
 import com.mindhub.user_service.exceptions.UserException;
 import org.springframework.stereotype.Component;
 
@@ -15,9 +12,11 @@ public interface UserService {
 
     String loginUser(LoginUserRecord loginUserRecord) throws UserException;
 
+    void validateUser(Long id) throws UserException;
+
     UserRecord getUserById(Long id) throws UserException;
 
-    UserRecord getUserByEmail(String email) throws UserException;
+    UserRegistrationRecord getUserByEmail(String email) throws UserException;
 
     UserRecord createUser(NewUserRecord newUserRecord) throws UserException;
 

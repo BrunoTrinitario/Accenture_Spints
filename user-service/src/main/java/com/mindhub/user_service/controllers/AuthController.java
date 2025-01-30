@@ -1,23 +1,25 @@
 package com.mindhub.user_service.controllers;
 
+import com.mindhub.user_service.config.JwtUtils;
 import com.mindhub.user_service.dtos.NewUserRecord;
 import com.mindhub.user_service.dtos.UserRecord;
 import com.mindhub.user_service.dtos.LoginUserRecord;
 import com.mindhub.user_service.exceptions.UserException;
 import com.mindhub.user_service.services.UserService;
+import com.mindhub.user_service.util.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/API/auth")
 public class AuthController {
 
     @Autowired
-    UserService userService;
+    private UserService userService;
+
+    @Autowired
+    private JwtUtils jwtUtils;
 
     /**
      * Create a new user.
@@ -32,6 +34,13 @@ public class AuthController {
     public ResponseEntity<UserRecord> createUser(@RequestBody NewUserRecord newUserRecord) throws UserException {
         UserRecord user = userService.createUser(newUserRecord);
         return ResponseEntity.ok(user);
+    }
+
+    @GetMapping("/register/{confirmationToken}")
+    public ResponseEntity<String> confirmUser(@PathVariable String confirmationToken) throws UserException {
+        Long id = Long.parseLong(jwtUtils.extractUsername(confirmationToken));
+        userService.validateUser(id);
+        return ResponseEntity.ok(Constants.CONFIRM);
     }
 
     @PostMapping("/login")

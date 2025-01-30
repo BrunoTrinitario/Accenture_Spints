@@ -6,11 +6,13 @@ import com.mindhub.user_service.dtos.*;
 import com.mindhub.user_service.exceptions.UserException;
 import com.mindhub.user_service.models.UserEntity;
 import com.mindhub.user_service.models.UserRole;
+import com.mindhub.user_service.models.UserStatus;
 import com.mindhub.user_service.repositories.UserRepository;
 import com.mindhub.user_service.services.UserService;
 import com.mindhub.user_service.util.Constants;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,6 +22,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Set;
@@ -56,15 +59,27 @@ public class UserServiceImp implements UserService {
             );
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            UserRecord user = getUserByEmail(loginUserRecord.email());
+            UserRegistrationRecord user = getUserByEmail(loginUserRecord.email());
 
-            String jwt = jwtUtils.generateToken(user.email(),user.id(),user.rol().toString());
+            if (user.userStatus() == UserStatus.ACTIVE){
+                String jwt = jwtUtils.generateToken(user.email(),user.id(),user.rol().toString());
 
-            return jwt;
+                return jwt;
+            }else{
+                throw new UserException(Constants.NOT_ACTIVE, HttpStatus.UNAUTHORIZED);
+            }
 
         } catch (BadCredentialsException e) {
             throw new UserException(Constants.INV_CRED, HttpStatus.UNAUTHORIZED);
         }
+    }
+
+    @Override
+    @Transactional(rollbackFor = {Exception.class})
+    public void validateUser(Long id) throws UserException {
+        UserEntity user = userRepository.findById(id).orElseThrow(()->new UserException(Constants.USR_NOT_EXIST, HttpStatus.NOT_FOUND));
+        user.setUserStatus(UserStatus.ACTIVE);
+        userRepository.save(user);
     }
 
     @Override
@@ -75,13 +90,14 @@ public class UserServiceImp implements UserService {
     }
 
     @Override
-    public UserRecord getUserByEmail(String email) throws UserException {
+    public UserRegistrationRecord getUserByEmail(String email) throws UserException {
         UserEntity user = userRepository.findByEmail(email).orElseThrow(()->new UserException(Constants.USR_NOT_EXIST, HttpStatus.NOT_FOUND));
-        UserRecord userRecord = new UserRecord(user.getId(), user.getUsername(),user.getEmail(),user.getUserRole());
+        UserRegistrationRecord userRecord = new UserRegistrationRecord(user.getId(), user.getUsername(),user.getEmail(),user.getUserRole(), user.getUserStatus());
         return userRecord;
     }
 
     @Override
+    @Transactional(rollbackFor = {UserException.class})
     public UserRecord createUser(NewUserRecord newUserRecord) throws UserException {
         validateUsername(newUserRecord.username());
         validatePassword(newUserRecord.password());
@@ -94,6 +110,7 @@ public class UserServiceImp implements UserService {
     }
 
     @Override
+    @Transactional(rollbackFor = {UserException.class})
     public UserRecord createAdmin(NewUserRecord newUserRecord) throws UserException {
         validateUsername(newUserRecord.username());
         validatePassword(newUserRecord.password());
@@ -101,13 +118,14 @@ public class UserServiceImp implements UserService {
         UserEntity userEntity = new UserEntity(newUserRecord.username(), passwordEncoder.encode(newUserRecord.password()), newUserRecord.email(), UserRole.ADMIN);
         userEntity = userRepository.save(userEntity);
         UserRecord userRecord = new UserRecord(userEntity.getId(), userEntity.getUsername(),userEntity.getEmail(),userEntity.getUserRole());
-        sendRegistrationEmail(userEntity);
         return userRecord;
     }
 
     private void sendRegistrationEmail(UserEntity userEntity){
+        String secret= "a2lhc2hqa2ZhamxrZ2xrc2FqbGtzYWpsZ2xrYXNkamxrZ2xrYXNsa3NhbGtqZ2xrc2Fsa2RqZ2Zsa2FzamRzYWxramdsa2FzZA";
+        String jwt = jwtUtils.generateRegisterToken(userEntity.getId(),50000L, secret);
         rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, "user.email",
-                new EmailEvent(userEntity.getEmail(), Constants.SUC_REG,Constants.BODY_MAIL+userEntity.getUsername()));
+                new EmailEvent(userEntity.getEmail(), Constants.SUC_REG,Constants.BODY_MAIL+userEntity.getUsername()+ "\nConfirm your user here: "+"http://localhost:8080/API/auth/register/"+jwt));
     }
 
     @Override

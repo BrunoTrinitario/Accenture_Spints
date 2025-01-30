@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.security.Key;
+import java.security.PrivateKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -79,5 +80,15 @@ public class JwtUtils {
     public String getEmailFromToken(String authorization){
         String token = authorization.substring(7);
         return extractUsername(token);
+    }
+
+    public String generateRegisterToken(Long userId, Long registerExpiration, String secretRegistrationKey){
+        SecretKey secretKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretRegistrationKey));
+        return Jwts.builder()
+                .subject(userId.toString())
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 1000*60*60*24))
+                .signWith(secretKey)
+                .compact();
     }
 }

@@ -4,6 +4,7 @@ import com.mindhub.user_service.config.JwtUtils;
 import com.mindhub.user_service.dtos.NewUserRecord;
 import com.mindhub.user_service.dtos.UpdateUserRecord;
 import com.mindhub.user_service.dtos.UserRecord;
+import com.mindhub.user_service.dtos.UserRegistrationRecord;
 import com.mindhub.user_service.exceptions.UserException;
 import com.mindhub.user_service.services.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -51,7 +52,7 @@ public class UserController {
      */
     @GetMapping("/private/email/{email}")
     public ResponseEntity<Long> getIdByEmail(@PathVariable String email) throws UserException {
-        UserRecord user = userService.getUserByEmail(email);
+        UserRegistrationRecord user = userService.getUserByEmail(email);
         return ResponseEntity.ok(user.id());
     }
 

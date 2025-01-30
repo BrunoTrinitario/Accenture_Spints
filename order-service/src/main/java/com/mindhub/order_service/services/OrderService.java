@@ -19,7 +19,7 @@ public interface OrderService {
     OrderDTO getOrderById(Long id) throws OrderException;
     OrderDTO getOrderByUserId(Long userId, Long OrderId) throws OrderException;
     OrderCreatedRecord createOrder(String email,NewOrderRecord newOrder) throws OrderException;
-    OrderDTO changeStatus(Long userId, Long orderId, OrderStatus orderStatus) throws OrderException;
+    OrderDTO changeStatus(Long userId,String userMail, Long orderId, OrderStatus orderStatus) throws OrderException;
     void deleteOrder(Long id) throws OrderException;
     void deleteOrderUser(Long userId,Long orderId) throws OrderException;
     boolean existsOrder(Long id);

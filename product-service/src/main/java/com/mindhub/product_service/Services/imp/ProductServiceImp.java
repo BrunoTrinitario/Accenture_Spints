@@ -12,6 +12,7 @@ import com.mindhub.product_service.util.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,6 +44,7 @@ public class ProductServiceImp implements ProductService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Product createProduct(NewProduct newProduct) throws ProductException {
         validateName(newProduct.name());
         validatePrice(newProduct.price());
@@ -53,6 +55,7 @@ public class ProductServiceImp implements ProductService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ExistentProductsRecord updateProduct(Long id, NewProduct newProduct) throws ProductException {
         validatePrice(newProduct.price());
         validateStock(newProduct.stock());
@@ -163,6 +166,7 @@ public class ProductServiceImp implements ProductService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateProductQuantity(Long idProduct, Integer quantity) throws ProductException {
         Product product = getProductById(idProduct);
         if (product.getStock()+quantity<0){

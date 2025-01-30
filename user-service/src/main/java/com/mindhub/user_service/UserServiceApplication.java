@@ -21,10 +21,10 @@ public class UserServiceApplication {
 	public CommandLineRunner initData(UserService userService, PasswordEncoder passwordEncoder){
 		return args -> {
 
-			NewUserRecord user = new NewUserRecord("admin", "admin", "email@hotmail.com");
-			NewUserRecord user2 = new NewUserRecord("user", "user", "user@hotmail.com");
-			userService.createAdmin(user);
-			userService.createUser(user2);
+			//NewUserRecord user = new NewUserRecord("admin", "admin", "email@hotmail.com");
+			//NewUserRecord user2 = new NewUserRecord("user", "user", "user@hotmail.com");
+			//userService.createAdmin(user);
+			//userService.createUser(user2);
 
 			System.out.println("The users microservice its running");
 		};

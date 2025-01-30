@@ -3,6 +3,7 @@ package com.mindhub.order_service.services.imp;
 import com.mindhub.order_service.dtos.*;
 import com.mindhub.order_service.exceptions.OrderException;
 import com.mindhub.order_service.exceptions.OrderItemException;
+import com.mindhub.order_service.exceptions.ProductServiceException;
 import com.mindhub.order_service.models.OrderEntity;
 import com.mindhub.order_service.models.OrderItem;
 import com.mindhub.order_service.models.OrderStatus;
@@ -21,6 +22,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -78,6 +80,7 @@ public class OrderServiceImp implements OrderService, OrderItemService {
     }
 
     @Override
+    @Transactional(rollbackFor = {Exception.class})
     public OrderCreatedRecord createOrder(String email, NewOrderRecord newOrder) throws OrderException {
             Long userId = getUserIdFromEmail(email);
 
@@ -89,9 +92,13 @@ public class OrderServiceImp implements OrderService, OrderItemService {
 
             List<ErrorProductRecord> orderItemsError = setOrderItemList(existentProductMap, newOrder.recordList(), order);
 
-            updateProducts(order.getOrderItemList(),-1);
-
             orderRepository.save(order);
+
+            try{
+                updateProducts(order.getOrderItemList(),-1);
+            }catch (ProductServiceException e){
+                throw new OrderException(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+            }
 
             OrderDTO orderDTO = new OrderDTO(order);
             OrderCreatedRecord orderCreatedRecord = new OrderCreatedRecord(orderDTO, orderItemsError);
@@ -136,7 +143,7 @@ public class OrderServiceImp implements OrderService, OrderItemService {
         return errorProductList;
     }
 
-    private void updateProducts(List<OrderItem> orderItemList, int factor) throws OrderException {
+    private void updateProducts(List<OrderItem> orderItemList, int factor) throws ProductServiceException {
 
         List<ProductQuantityRecord> productQuantityRecordList = new ArrayList<>();
         orderItemList.forEach(orderItem -> {
@@ -148,7 +155,7 @@ public class OrderServiceImp implements OrderService, OrderItemService {
         try{
             restTemplate.exchange(productPath + "/private/to-order", HttpMethod.PUT ,httpEntity, String.class);
         } catch (RestClientException e) {
-            throw new OrderException(Constants.COM_ERR_PROD, HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new ProductServiceException(Constants.COM_ERR_PROD);
         }
 
     }
@@ -169,18 +176,18 @@ public class OrderServiceImp implements OrderService, OrderItemService {
     }
 
     @Override
-    public OrderDTO changeStatus(Long userId, Long orderId, OrderStatus orderStatus) throws OrderException {
+    public OrderDTO changeStatus(Long userId,String userMail, Long orderId, OrderStatus orderStatus) throws OrderException {
         OrderEntity order = orderRepository.findById(orderId).orElseThrow(() -> new OrderException(Constants.ORDER_NOT_FOUND, HttpStatus.NOT_FOUND));
         validateOrderOwner(userId,order.getUserId());
         order.setOrderStatus(orderStatus);
         order = orderRepository.save(order);
         if (order.getOrderStatus() == OrderStatus.COMPLETED){
-            sendDataToGeneratePdf(order);
+            sendDataToGeneratePdf(order,userMail);
         }
         return new OrderDTO(order);
     }
 
-    private void sendDataToGeneratePdf(OrderEntity order){
+    private void sendDataToGeneratePdf(OrderEntity order,String userMail){
         List<ProductRecord> listProducts = new ArrayList<>();
         for (OrderItem item : order.getOrderItemList()){
             try {
@@ -189,9 +196,8 @@ public class OrderServiceImp implements OrderService, OrderItemService {
             }catch (RestClientException e){
 
             }
-
         }
-        OrderToPdfDTO orderToPdfDTO = new OrderToPdfDTO(order.getId(), order.getUserId(), "mail", listProducts);
+        OrderToPdfDTO orderToPdfDTO = new OrderToPdfDTO(order.getId(), order.getUserId(), userMail, listProducts);
         rabbitTemplate.convertAndSend("email-exchange", "user.pdf", orderToPdfDTO);
     }
 
@@ -224,12 +230,13 @@ public class OrderServiceImp implements OrderService, OrderItemService {
     }
 
     @Override
+    @Transactional(rollbackFor = {Exception.class})
     public OrderItemRecord addOrderItem(Long userId, Long OrderId, ProductQuantityRecord productQuantityRecord) throws OrderException, OrderItemException {
         OrderEntity order = orderRepository.findById(OrderId).orElseThrow(() -> new OrderException(Constants.ORDER_NOT_FOUND, HttpStatus.NOT_FOUND));
         validateOrderOwner(userId,order.getUserId());
         validOrderStatus(order.getId());
         validateOrderItem(order.getId(),productQuantityRecord.id());
-        if (productQuantityRecord.quantity()==null || productQuantityRecord.quantity()<0){
+        if (productQuantityRecord.quantity()<0){
             throw new OrderItemException(Constants.INV_QUANTITY);
         }
 
@@ -241,11 +248,16 @@ public class OrderServiceImp implements OrderService, OrderItemService {
         if (existentProductMap.containsKey(productQuantityRecord.id())){
             Integer realQuantity = existentProductMap.get(productQuantityRecord.id());
             if (realQuantity>= productQuantityRecord.quantity()){
+
                 OrderItem orderItem = new OrderItem(productQuantityRecord.quantity(), order, productQuantityRecord.id());
 
                 List<OrderItem> orderItemList = new ArrayList<>();
                 orderItemList.add(orderItem);
-                updateProducts(orderItemList,-1);
+                try{
+                    updateProducts(orderItemList,-1);
+                }catch (ProductServiceException e){
+                    throw new OrderException(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+                }
 
                 orderItemRepository.save(orderItem);
                 order.addOrderItem(orderItem);
@@ -287,6 +299,7 @@ public class OrderServiceImp implements OrderService, OrderItemService {
     }
 
     @Override
+    @Transactional(rollbackFor = {Exception.class})
     public OrderItemRecord updateOrderItemQuantity(Long userId,Long orderItemId, Integer quantity) throws OrderItemException, OrderException {
         OrderItem orderItem = orderItemRepository.findById(orderItemId).orElseThrow(()->new OrderItemException(Constants.ORDER_ITEM_NOT_FOUND, HttpStatus.NOT_FOUND));
         validateOrderOwner(userId, orderItem.getOrder().getUserId());
@@ -298,14 +311,18 @@ public class OrderServiceImp implements OrderService, OrderItemService {
 
             HashMap<Long, Integer> existentProduct = getExistentProducts(List.of(new ProductQuantityRecord(orderItem.getProductId(),quantity)));
 
-            if (diference>0) {
-                updateProducts(List.of(new OrderItem(diference, null, orderItem.getProductId())), 1);
-            }else {
-                if (existentProduct.get(orderItem.getProductId())>= -1*diference){
+            try{
+                if (diference>0) {
                     updateProducts(List.of(new OrderItem(diference, null, orderItem.getProductId())), 1);
-                }else{
-                    throw new OrderException(Constants.NEGATIVE_STOCK, HttpStatus.NOT_ACCEPTABLE);
+                }else {
+                    if (existentProduct.get(orderItem.getProductId())>= -1*diference){
+                        updateProducts(List.of(new OrderItem(diference, null, orderItem.getProductId())), 1);
+                    }else{
+                        throw new OrderException(Constants.NEGATIVE_STOCK, HttpStatus.NOT_ACCEPTABLE);
+                    }
                 }
+            }catch (ProductServiceException e){
+                throw new OrderException(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
             }
             orderItem.setQuantity(quantity);
             orderItem = orderItemRepository.save(orderItem);

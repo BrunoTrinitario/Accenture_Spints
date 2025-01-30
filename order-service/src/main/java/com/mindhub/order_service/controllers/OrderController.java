@@ -99,7 +99,8 @@ public class OrderController {
     @PutMapping("/user/{orderId}")
     public ResponseEntity<OrderDTO> changeStatus(@PathVariable Long orderId, @RequestBody UpdateOrderRecord updateOrderRecord, HttpServletRequest request) throws OrderException {
         Long userId  = jwtUtils.getIdFromToken(request.getHeader("Authorization"));
-        OrderDTO orderDTO = orderService.changeStatus(userId, orderId, updateOrderRecord.orderStatus());
+        String email = jwtUtils.getEmailFromToken(request.getHeader("Authorization"));
+        OrderDTO orderDTO = orderService.changeStatus(userId,email, orderId, updateOrderRecord.orderStatus());
         return new ResponseEntity<>(orderDTO, HttpStatus.CREATED);
     }
 

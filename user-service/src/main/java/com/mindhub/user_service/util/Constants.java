@@ -16,5 +16,7 @@ public class Constants {
     public static final String SUC_REG = "Successful register";
     public static final String BODY_MAIL = "Thanks for using our application!. \nHave a nice day ;)\nYour username is: ";
     public static final String INV_CRED = "Invalid credentials";
+    public static final String CONFIRM ="The user was confirmed";
+    public static final String NOT_ACTIVE = "The user is not confirmed";
 
 }
