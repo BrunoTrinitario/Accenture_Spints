@@ -14,8 +14,8 @@ import java.util.Set;
 @Service
 public interface OrderItemService {
     Set<OrderItemRecord> getAllOrderItemsByOrderId(Long id) throws OrderException;
-    OrderItemRecord addOrderItem(Long orderId, ProductQuantityRecord productQuantityRecord) throws OrderException, OrderItemException;
-    void deleteOrderItem(Long id) throws OrderException, OrderItemException;
-    OrderItemRecord updateOrderItemQuantity(Long id, Integer quantity) throws OrderItemException, OrderException;
+    OrderItemRecord addOrderItem(Long userId, Long orderId, ProductQuantityRecord productQuantityRecord) throws OrderException, OrderItemException;
+    void deleteOrderItem(Long userId, Long orderItemId) throws OrderException, OrderItemException;
+    OrderItemRecord updateOrderItemQuantity(Long userId, Long orderItemId, Integer quantity) throws OrderItemException, OrderException;
     boolean existsOrderItem(Long id);
 }

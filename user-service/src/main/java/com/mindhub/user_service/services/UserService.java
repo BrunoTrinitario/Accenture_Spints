@@ -1,5 +1,6 @@
 package com.mindhub.user_service.services;
 
+import com.mindhub.user_service.dtos.LoginUserRecord;
 import com.mindhub.user_service.dtos.NewUserRecord;
 import com.mindhub.user_service.dtos.UpdateUserRecord;
 import com.mindhub.user_service.dtos.UserRecord;
@@ -11,6 +12,8 @@ import java.util.Set;
 @Component
 public interface UserService {
     Set<UserRecord> getAllUsers();
+
+    String loginUser(LoginUserRecord loginUserRecord) throws UserException;
 
     UserRecord getUserById(Long id) throws UserException;
 

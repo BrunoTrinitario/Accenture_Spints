@@ -44,6 +44,20 @@ public class AdminController {
         return new ResponseEntity<Set<UserRecord>>(userRecords, HttpStatus.OK);
     }
 
+    /**
+     * Retrieve a user by their ID.
+     * @param id The ID of the user to retrieve.
+     * @return A {@link ResponseEntity} containing the requested {@link UserRecord}.
+     * @throws UserException If the user is not found or an error occurs.
+     * @response 200 OK - The requested user.
+     * @response 404 NOT FOUND - If the user is not found.
+     */
+    @GetMapping("/users/{id}")
+    public ResponseEntity<UserRecord> getUserById(@PathVariable Long id) throws UserException {
+        UserRecord user = userService.getUserById(id);
+        return ResponseEntity.ok(user);
+    }
+
     @GetMapping("/orders/all")
     public ResponseEntity<Set<OrderDTO>> getAllOrders(){
         Set<OrderDTO> orderDTOS = adminService.getAllOrders();

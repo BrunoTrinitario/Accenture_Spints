@@ -1,5 +1,6 @@
 package com.mindhub.api_gateway.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
@@ -11,6 +12,12 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 public class GatewayConfig {
+
+    @Autowired
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @Autowired
+    private AdminFilter adminFilter;
 
     /**
      * Defines a custom RouteLocator bean to configure routing for various microservices.
@@ -30,12 +37,29 @@ public class GatewayConfig {
     @Bean
     public RouteLocator customRouter(RouteLocatorBuilder  routeLocatorBuilder){
        return routeLocatorBuilder.routes()
-               .route("user-service", r -> r.path("/API/users/**").uri("lb://user-service") )
-               .route("admin-service", r -> r.path("/API/admin/**").uri("lb://user-service") )
-               .route("auth-service", r -> r.path("/API/auth/**").uri("lb://user-service") )
-               .route("product-service", r->r.path("/API/products/**").uri("lb://product-service"))
-               .route("order-service", r->r.path("/API/orders/**").uri("lb://order-service"))
-               .route("orderItem-service", r->r.path("/API/order-items/**").uri("lb://order-service"))
+               .route("user-service", r -> r.path("/API/users/**")
+                       .filters(f -> f.filter(jwtAuthenticationFilter))
+                       .uri("lb://user-service") )
+               .route("admin-service", r -> r.path("/API/admin/**")
+                       .filters(f -> f.filters(jwtAuthenticationFilter,adminFilter))
+                       .uri("lb://user-service") )
+               .route("auth-service", r -> r.path("/API/auth/**")
+                       .uri("lb://user-service") )
+               .route("product-service", r->r.path("/API/products/public/**")
+                       .filters(f -> f.filter(jwtAuthenticationFilter))
+                       .uri("lb://product-service"))
+               .route("product-service", r->r.path("/API/products/admin/**")
+                       .filters(f -> f.filters(jwtAuthenticationFilter,adminFilter))
+                       .uri("lb://product-service"))
+               .route("order-service", r->r.path("/API/orders/admin/**")
+                       .filters(f -> f.filters(jwtAuthenticationFilter,adminFilter))
+                       .uri("lb://order-service"))
+               .route("order-service", r->r.path("/API/orders/user/**")
+                       .filters(f -> f.filter(jwtAuthenticationFilter))
+                       .uri("lb://order-service"))
+               .route("orderItem-service", r->r.path("/API/order-items/user/**")
+                       .filters(f -> f.filter(jwtAuthenticationFilter))
+                       .uri("lb://order-service"))
                .build();
     }
 }

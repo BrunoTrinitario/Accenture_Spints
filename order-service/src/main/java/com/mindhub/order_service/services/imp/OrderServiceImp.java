@@ -12,7 +12,6 @@ import com.mindhub.order_service.repositories.OrderRepository;
 import com.mindhub.order_service.services.OrderItemService;
 import com.mindhub.order_service.services.OrderService;
 import com.mindhub.order_service.util.Constants;
-import org.aspectj.weaver.ast.Or;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -72,8 +71,15 @@ public class OrderServiceImp implements OrderService, OrderItemService {
     }
 
     @Override
-    public OrderCreatedRecord createOrder(NewOrderRecord newOrder) throws OrderException {
-            Long userId = getUserIdFromEmail(newOrder.email());
+    public OrderDTO getOrderByUserId(Long userId, Long orderId) throws OrderException {
+        OrderDTO order = getOrderById(orderId);
+        validateOrderOwner(userId,order.getUserId());
+        return order;
+    }
+
+    @Override
+    public OrderCreatedRecord createOrder(String email, NewOrderRecord newOrder) throws OrderException {
+            Long userId = getUserIdFromEmail(email);
 
             HashMap<Long,Integer> existentProductMap = getExistentProducts(newOrder.recordList());
 
@@ -99,7 +105,7 @@ public class OrderServiceImp implements OrderService, OrderItemService {
                 new ParameterizedTypeReference<>() {};
         HttpEntity<List<ProductQuantityRecord>> httpEntity = new HttpEntity<>(productQuantityRecordList);
         try{
-            ResponseEntity<HashMap<Long, Integer>> responseEntity = restTemplate.exchange(productPath, HttpMethod.PUT ,httpEntity, responseType);
+            ResponseEntity<HashMap<Long, Integer>> responseEntity = restTemplate.exchange(productPath + "/private", HttpMethod.PUT ,httpEntity, responseType);
             return responseEntity.getBody();
         } catch (RestClientException e) {
             throw new OrderException(Constants.COM_ERR_PROD, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -140,7 +146,7 @@ public class OrderServiceImp implements OrderService, OrderItemService {
         HttpEntity<List<ProductQuantityRecord>> httpEntity = new HttpEntity<>(productQuantityRecordList);
 
         try{
-            restTemplate.exchange(productPath + "/to-order", HttpMethod.PUT ,httpEntity, String.class);
+            restTemplate.exchange(productPath + "/private/to-order", HttpMethod.PUT ,httpEntity, String.class);
         } catch (RestClientException e) {
             throw new OrderException(Constants.COM_ERR_PROD, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -149,7 +155,7 @@ public class OrderServiceImp implements OrderService, OrderItemService {
 
     private Long getUserIdFromEmail(String email) throws OrderException {
         try{
-            String url = userPath + "/email/" + email;
+            String url = userPath + "/private/email/" + email;
             Long userId = restTemplate.getForObject(url, Long.class);
             return userId;
         } catch (RestClientException e) {
@@ -163,8 +169,9 @@ public class OrderServiceImp implements OrderService, OrderItemService {
     }
 
     @Override
-    public OrderDTO changeStatus(Long id, OrderStatus orderStatus) throws OrderException {
-        OrderEntity order = orderRepository.findById(id).orElseThrow(() -> new OrderException(Constants.ORDER_NOT_FOUND, HttpStatus.NOT_FOUND));
+    public OrderDTO changeStatus(Long userId, Long orderId, OrderStatus orderStatus) throws OrderException {
+        OrderEntity order = orderRepository.findById(orderId).orElseThrow(() -> new OrderException(Constants.ORDER_NOT_FOUND, HttpStatus.NOT_FOUND));
+        validateOrderOwner(userId,order.getUserId());
         order.setOrderStatus(orderStatus);
         order = orderRepository.save(order);
         if (order.getOrderStatus() == OrderStatus.COMPLETED){
@@ -198,6 +205,13 @@ public class OrderServiceImp implements OrderService, OrderItemService {
     }
 
     @Override
+    public void deleteOrderUser(Long userId, Long orderId) throws OrderException {
+        OrderDTO order = getOrderById(orderId);
+        validateOrderOwner(userId,order.getUserId());
+        deleteOrder(orderId);
+    }
+
+    @Override
     public boolean existsOrder(Long id) {
         return orderRepository.existsById(id);
     }
@@ -210,8 +224,9 @@ public class OrderServiceImp implements OrderService, OrderItemService {
     }
 
     @Override
-    public OrderItemRecord addOrderItem(Long OrderId, ProductQuantityRecord productQuantityRecord) throws OrderException, OrderItemException {
+    public OrderItemRecord addOrderItem(Long userId, Long OrderId, ProductQuantityRecord productQuantityRecord) throws OrderException, OrderItemException {
         OrderEntity order = orderRepository.findById(OrderId).orElseThrow(() -> new OrderException(Constants.ORDER_NOT_FOUND, HttpStatus.NOT_FOUND));
+        validateOrderOwner(userId,order.getUserId());
         validOrderStatus(order.getId());
         validateOrderItem(order.getId(),productQuantityRecord.id());
         if (productQuantityRecord.quantity()==null || productQuantityRecord.quantity()<0){
@@ -257,8 +272,10 @@ public class OrderServiceImp implements OrderService, OrderItemService {
     }
 
     @Override
-    public void deleteOrderItem(Long id) throws OrderItemException, OrderException {
-        OrderItem orderItem = orderItemRepository.findById(id).orElseThrow(()->new OrderItemException(Constants.ORDER_ITEM_NOT_FOUND, HttpStatus.NOT_FOUND));
+    public void deleteOrderItem(Long userId, Long orderItemId) throws OrderItemException, OrderException {
+        OrderItem orderItem = orderItemRepository.findById(orderItemId).orElseThrow(()->new OrderItemException(Constants.ORDER_ITEM_NOT_FOUND, HttpStatus.NOT_FOUND));
+        validateOrderOwner(userId, orderItem.getOrder().getUserId());
+
         validOrderStatus(orderItem.getOrder().getId());
 
         List<OrderItem> orderItemList = new ArrayList<>();
@@ -270,22 +287,30 @@ public class OrderServiceImp implements OrderService, OrderItemService {
     }
 
     @Override
-    public OrderItemRecord updateOrderItemQuantity(Long id, Integer quantity) throws OrderItemException, OrderException {
-        OrderItem orderItem = orderItemRepository.findById(id).orElseThrow(()->new OrderItemException(Constants.ORDER_ITEM_NOT_FOUND, HttpStatus.NOT_FOUND));
+    public OrderItemRecord updateOrderItemQuantity(Long userId,Long orderItemId, Integer quantity) throws OrderItemException, OrderException {
+        OrderItem orderItem = orderItemRepository.findById(orderItemId).orElseThrow(()->new OrderItemException(Constants.ORDER_ITEM_NOT_FOUND, HttpStatus.NOT_FOUND));
+        validateOrderOwner(userId, orderItem.getOrder().getUserId());
         validOrderStatus(orderItem.getOrder().getId());
 
-        if (quantity>0 && orderItem.getQuantity() != quantity){
-            HashMap<Long, Integer> existentProduct = getExistentProducts(List.of(new ProductQuantityRecord(id,quantity)));
+        int diference = orderItem.getQuantity()-quantity;
 
-            if (existentProduct.get(id)>=quantity){
-                int diference = orderItem.getQuantity()-quantity;
-                updateProducts(List.of(new OrderItem(diference,null,id)),1);
-                orderItem.setQuantity(quantity);
-                orderItem = orderItemRepository.save(orderItem);
-                return new OrderItemRecord(orderItem.getId(),orderItem.getProductId(),orderItem.getQuantity());
-            }else{
-                throw new OrderException(Constants.NEGATIVE_STOCK, HttpStatus.NOT_ACCEPTABLE);
+        if (quantity>0 && orderItem.getQuantity() != quantity){
+
+            HashMap<Long, Integer> existentProduct = getExistentProducts(List.of(new ProductQuantityRecord(orderItem.getProductId(),quantity)));
+
+            if (diference>0) {
+                updateProducts(List.of(new OrderItem(diference, null, orderItem.getProductId())), 1);
+            }else {
+                if (existentProduct.get(orderItem.getProductId())>= -1*diference){
+                    updateProducts(List.of(new OrderItem(diference, null, orderItem.getProductId())), 1);
+                }else{
+                    throw new OrderException(Constants.NEGATIVE_STOCK, HttpStatus.NOT_ACCEPTABLE);
+                }
             }
+            orderItem.setQuantity(quantity);
+            orderItem = orderItemRepository.save(orderItem);
+            return new OrderItemRecord(orderItem.getId(),orderItem.getProductId(),orderItem.getQuantity());
+
         }else{
             throw new OrderException(Constants.INV_QUANTITY, HttpStatus.NOT_ACCEPTABLE);
         }
@@ -301,6 +326,12 @@ public class OrderServiceImp implements OrderService, OrderItemService {
         OrderDTO order = getOrderById(id);
         if (order.getOrderStatus()==OrderStatus.COMPLETED){
             throw new OrderException(Constants.ORDER_COMPLETED,HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    private void validateOrderOwner(Long userId, Long orderId) throws OrderException {
+        if (userId!=orderId){
+            throw new OrderException(Constants.NOT_PERM, HttpStatus.UNAUTHORIZED);
         }
     }
 }

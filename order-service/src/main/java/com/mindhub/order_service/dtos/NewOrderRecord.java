@@ -5,5 +5,5 @@ import com.mindhub.order_service.models.OrderStatus;
 
 import java.util.List;
 
-public record NewOrderRecord(String email, List<ProductQuantityRecord> recordList) {
+public record NewOrderRecord(List<ProductQuantityRecord> recordList) {
 }

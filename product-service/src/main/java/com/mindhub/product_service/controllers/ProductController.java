@@ -28,7 +28,7 @@ public class ProductController {
      * @return A {@link ResponseEntity} containing a set of {@link Product} objects.
      * @response 200 OK - List of all products.
      */
-    @GetMapping
+    @GetMapping("/public")
     public ResponseEntity<Set<ExistentProductsRecord>> getAllProducts() {
         Set<ExistentProductsRecord> products = productService.getAllProducts();
         return ResponseEntity.ok(products);
@@ -42,7 +42,7 @@ public class ProductController {
      * @response 200 OK - The requested product.
      * @response 404 NOT FOUND - If the product is not found.
      */
-    @GetMapping("/{id}")
+    @GetMapping("/admin/{id}")
     public ResponseEntity<ProductRecord> getProductById(@PathVariable Long id) throws ProductException {
         ProductRecord product = productService.getDataProductById(id);
         return ResponseEntity.ok(product);
@@ -55,7 +55,7 @@ public class ProductController {
      * @response 200 OK - The created product.
      * @response 400 Bad gateway - If the input data its invalid
      */
-    @PostMapping
+    @PostMapping("/admin")
     public ResponseEntity<Product> createProduct(@RequestBody NewProduct newProduct) throws ProductException {
         Product product = productService.createProduct(newProduct);
         return ResponseEntity.ok(product);
@@ -70,7 +70,7 @@ public class ProductController {
      * @response 200 OK - The updated product.
      * @response 400 Bad gateway - If the input data its invalid
      */
-    @PutMapping("/{id}")
+    @PutMapping("/admin/{id}")
     public ResponseEntity<ExistentProductsRecord> updateProduct(@PathVariable Long id, @RequestBody NewProduct newProduct) throws ProductException {
         ExistentProductsRecord updatedProduct = productService.updateProduct(id, newProduct);
         return ResponseEntity.ok(updatedProduct);
@@ -84,19 +84,19 @@ public class ProductController {
      * @response 204 NO CONTENT - Product successfully deleted.
      * @response 404 NOT FOUND - If the product is not found.
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/admin/{id}")
     public ResponseEntity<Void> deleteProductById(@PathVariable Long id) throws ProductException {
         productService.deleteProductById(id);
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping
+    @PutMapping("/private")
     public ResponseEntity<HashMap<Long, Integer>> existsProducts(@RequestBody List<ProductQuantityRecord> recordList){
         HashMap<Long, Integer> products = productService.getAllAvailableProducts(recordList);
         return ResponseEntity.ok(products);
     }
 
-    @PutMapping("to-order")
+    @PutMapping("/private/to-order")
     public ResponseEntity<String> existProduct(@RequestBody List<ProductQuantityRecord> quantityRecord) throws ProductException {
         productService.updateProductsQuantity(quantityRecord);
         return new ResponseEntity<String>(Constants.UPDATED_PDT, HttpStatus.OK);

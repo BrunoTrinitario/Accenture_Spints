@@ -17,16 +17,16 @@ public class UserEntity {
     @Column(unique = false, nullable = true)
     private String password;
 
-    private UserRol userRol;
+    private UserRole userRole;
 
     public UserEntity() {
     }
 
-    public UserEntity(String username, String password, String email, UserRol userRol) {
+    public UserEntity(String username, String password, String email, UserRole userRol) {
         this.username = username;
         this.password = password;
         this.email = email;
-        this.userRol = userRol;
+        this.userRole = userRol;
     }
 
     public Long getId() {
@@ -49,12 +49,12 @@ public class UserEntity {
         this.email = email;
     }
 
-    public UserRol getUserRol() {
-        return userRol;
+    public UserRole getUserRole() {
+        return userRole;
     }
 
-    public void setUserRol(UserRol userRol) {
-        this.userRol = userRol;
+    public void setUserRole(UserRole userRole) {
+        this.userRole = userRole;
     }
 
     public String getPassword() {

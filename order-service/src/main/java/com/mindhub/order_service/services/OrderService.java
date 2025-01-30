@@ -17,9 +17,11 @@ public interface OrderService {
     Set<OrderDTO> getAllOrders();
     Set<OrderDTO> getAllOrdersByUserId(Long id);
     OrderDTO getOrderById(Long id) throws OrderException;
-    OrderCreatedRecord createOrder(NewOrderRecord newOrder) throws OrderException;
-    OrderDTO changeStatus(Long id, OrderStatus orderStatus) throws OrderException;
+    OrderDTO getOrderByUserId(Long userId, Long OrderId) throws OrderException;
+    OrderCreatedRecord createOrder(String email,NewOrderRecord newOrder) throws OrderException;
+    OrderDTO changeStatus(Long userId, Long orderId, OrderStatus orderStatus) throws OrderException;
     void deleteOrder(Long id) throws OrderException;
+    void deleteOrderUser(Long userId,Long orderId) throws OrderException;
     boolean existsOrder(Long id);
 
 }

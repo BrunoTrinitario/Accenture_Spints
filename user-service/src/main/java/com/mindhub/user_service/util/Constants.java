@@ -15,5 +15,6 @@ public class Constants {
     public static final String[] URL_MAILS = {"@hotmail.com","outlook.com","gmail.com"};
     public static final String SUC_REG = "Successful register";
     public static final String BODY_MAIL = "Thanks for using our application!. \nHave a nice day ;)\nYour username is: ";
+    public static final String INV_CRED = "Invalid credentials";
 
 }

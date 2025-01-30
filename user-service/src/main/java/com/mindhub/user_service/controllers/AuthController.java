@@ -2,6 +2,7 @@ package com.mindhub.user_service.controllers;
 
 import com.mindhub.user_service.dtos.NewUserRecord;
 import com.mindhub.user_service.dtos.UserRecord;
+import com.mindhub.user_service.dtos.LoginUserRecord;
 import com.mindhub.user_service.exceptions.UserException;
 import com.mindhub.user_service.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,10 +28,16 @@ public class AuthController {
      * @response 400 BAD GATEWAY - if the input data its invalid
      * @response 409 BAD GATEWAY - if the email already exists
      */
-    @PostMapping
+    @PostMapping("/register")
     public ResponseEntity<UserRecord> createUser(@RequestBody NewUserRecord newUserRecord) throws UserException {
         UserRecord user = userService.createUser(newUserRecord);
         return ResponseEntity.ok(user);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<String> loginUser(@RequestBody LoginUserRecord loginUserRecord) throws UserException {
+        String token = userService.loginUser(loginUserRecord);
+        return ResponseEntity.ok(token);
     }
 
 
