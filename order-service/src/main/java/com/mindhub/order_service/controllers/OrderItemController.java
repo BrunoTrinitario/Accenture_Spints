@@ -33,8 +33,9 @@ public class OrderItemController {
      * @response 200 OK - List of order items for the specified order.
      */
     @GetMapping("/user/{orderId}")
-    public ResponseEntity<Set<OrderItemRecord>> getAllOrderItemsByOrderId(@PathVariable Long orderId) throws OrderException {
-        Set<OrderItemRecord> orderItems = orderItemService.getAllOrderItemsByOrderId(orderId);
+    public ResponseEntity<Set<OrderItemRecord>> getAllOrderItemsByOrderId(@PathVariable Long orderId, HttpServletRequest request) throws OrderException {
+        Long userId = jwtUtils.getIdFromToken(request.getHeader("Authorization"));
+        Set<OrderItemRecord> orderItems = orderItemService.getAllOrderItemsByOrderId(userId, orderId);
         return ResponseEntity.ok(orderItems);
     }
 

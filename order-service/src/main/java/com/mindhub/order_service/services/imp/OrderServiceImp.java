@@ -223,8 +223,9 @@ public class OrderServiceImp implements OrderService, OrderItemService {
     }
 
     @Override
-    public Set<OrderItemRecord> getAllOrderItemsByOrderId(Long id) throws OrderException {
-        OrderEntity order = orderRepository.findById(id).orElseThrow(() -> new OrderException(Constants.ORDER_NOT_FOUND, HttpStatus.NOT_FOUND));
+    public Set<OrderItemRecord> getAllOrderItemsByOrderId(Long userId, Long orderId) throws OrderException {
+        OrderEntity order = orderRepository.findById(orderId).orElseThrow(() -> new OrderException(Constants.ORDER_NOT_FOUND, HttpStatus.NOT_FOUND));
+        validateOrderOwner(userId,order.getUserId());
         Set<OrderItemRecord> orderItemSet = order.getOrderItemList().stream().map(orderItem -> new OrderItemRecord(orderItem.getId(),orderItem.getProductId(),orderItem.getQuantity())).collect(Collectors.toSet());
         return orderItemSet;
     }
@@ -235,7 +236,7 @@ public class OrderServiceImp implements OrderService, OrderItemService {
         OrderEntity order = orderRepository.findById(OrderId).orElseThrow(() -> new OrderException(Constants.ORDER_NOT_FOUND, HttpStatus.NOT_FOUND));
         validateOrderOwner(userId,order.getUserId());
         validOrderStatus(order.getId());
-        validateOrderItem(order.getId(),productQuantityRecord.id());
+        validateOrderItem(userId, order.getId(), productQuantityRecord.id());
         if (productQuantityRecord.quantity()<0){
             throw new OrderItemException(Constants.INV_QUANTITY);
         }
@@ -273,8 +274,8 @@ public class OrderServiceImp implements OrderService, OrderItemService {
 
     }
 
-    private void validateOrderItem(Long orderId,Long orderItemProductId) throws OrderException {
-        Set<OrderItemRecord> orderItemSet = getAllOrderItemsByOrderId(orderId);
+    private void validateOrderItem(Long userId, Long orderId,Long orderItemProductId) throws OrderException {
+        Set<OrderItemRecord> orderItemSet = getAllOrderItemsByOrderId(userId,orderId);
         Iterator<OrderItemRecord> it = orderItemSet.iterator();
         while (it.hasNext()){
             if (it.next().productId()==orderItemProductId){
