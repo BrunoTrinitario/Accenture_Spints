@@ -189,13 +189,11 @@ public class OrderServiceImp implements OrderService, OrderItemService {
 
     private void sendDataToGeneratePdf(OrderEntity order,String userMail){
         List<ProductRecord> listProducts = new ArrayList<>();
-        for (OrderItem item : order.getOrderItemList()){
-            try {
-                ProductRecord product = restTemplate.getForObject(productPath + "/" + item.getProductId(), ProductRecord.class );
-                listProducts.add(product);
-            }catch (RestClientException e){
-
-            }
+        Iterator<OrderItem> it = order.getOrderItemList().iterator();
+        while (it.hasNext()){
+            OrderItem aux = it.next();
+            ProductRecord product = restTemplate.getForObject(productPath + "/admin/" + aux.getProductId(), ProductRecord.class );
+            listProducts.add(product);
         }
         OrderToPdfDTO orderToPdfDTO = new OrderToPdfDTO(order.getId(), order.getUserId(), userMail, listProducts);
         rabbitTemplate.convertAndSend("email-exchange", "user.pdf", orderToPdfDTO);

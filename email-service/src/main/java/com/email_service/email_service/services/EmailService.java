@@ -56,17 +56,36 @@ public class EmailService {
     }
 
     private void generatePdfContent(PDPageContentStream contentStream, OrderToPdfDTO orderDTO, PDPage page) throws IOException {
-        PDType1Font font = PDType1Font.HELVETICA_BOLD;
-        contentStream.setFont(font, 14);
+        PDType1Font titleFont = PDType1Font.HELVETICA_BOLD;
+        PDType1Font textFont = PDType1Font.HELVETICA;
+
+        contentStream.setFont(titleFont, 16);
         contentStream.beginText();
-        contentStream.setLeading(14.5f);
-        contentStream.newLineAtOffset(64, 750); // Posición inicial (x, y)
-        contentStream.showText("Order ID: "+orderDTO.getOrderId());
+        contentStream.setLeading(20f);
+        contentStream.newLineAtOffset(220, 750);
+        contentStream.showText("Order Confirmation");
+        contentStream.endText();
+
+        contentStream.setFont(textFont, 12);
+        contentStream.beginText();
+        contentStream.setLeading(16f);
+        contentStream.newLineAtOffset(64, 700);
+
+        contentStream.showText("--------------------------------------------------------------------------------------------------------------------------");
         contentStream.newLine();
-        for (ProductRecord item : orderDTO.getnewProductList()){
-            contentStream.showText("Product ID: " + item.id() + " name: " + item.name() + " description: " + item.description()+" price: "+ item.price()+  " Quantity: "+ item.quantity());
+        contentStream.showText("ID       Name                     Description                Price      Qty");
+        contentStream.newLine();
+        contentStream.showText("--------------------------------------------------------------------------------------------------------------------------");
+        contentStream.newLine();
+
+        for (ProductRecord item : orderDTO.getnewProductList()) {
+            String productLine = String.format("%-8s %-20s %-25s %-8s %-4s",
+                    item.id(), item.name(), item.description(), item.price(), item.quantity());
+            contentStream.showText(productLine);
             contentStream.newLine();
         }
+
+        contentStream.showText("--------------------------------------------------------------------------------------------------------------------------");
         contentStream.endText();
         contentStream.close();
     }
