@@ -122,8 +122,7 @@ public class UserServiceImp implements UserService {
     }
 
     private void sendRegistrationEmail(UserEntity userEntity){
-        String secret= "a2lhc2hqa2ZhamxrZ2xrc2FqbGtzYWpsZ2xrYXNkamxrZ2xrYXNsa3NhbGtqZ2xrc2Fsa2RqZ2Zsa2FzamRzYWxramdsa2FzZA";
-        String jwt = jwtUtils.generateRegisterToken(userEntity.getId(),50000L, secret);
+        String jwt = jwtUtils.generateRegisterToken(userEntity.getId(),50000L);
         rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, "user.email",
                 new EmailEvent(userEntity.getEmail(), Constants.SUC_REG,Constants.BODY_MAIL+userEntity.getUsername()+ "\nConfirm your user here: "+"http://localhost:8080/API/auth/register/"+jwt));
     }

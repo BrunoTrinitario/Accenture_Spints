@@ -82,8 +82,7 @@ public class JwtUtils {
         return extractUsername(token);
     }
 
-    public String generateRegisterToken(Long userId, Long registerExpiration, String secretRegistrationKey){
-        SecretKey secretKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretRegistrationKey));
+    public String generateRegisterToken(Long userId, Long registerExpiration){
         return Jwts.builder()
                 .subject(userId.toString())
                 .issuedAt(new Date())
