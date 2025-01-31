@@ -42,7 +42,7 @@ public class ProductController {
      * @response 200 OK - The requested product.
      * @response 404 NOT FOUND - If the product is not found.
      */
-    @GetMapping("/admin/{id}")
+    @GetMapping("/public/{id}")
     public ResponseEntity<ProductRecord> getProductById(@PathVariable Long id) throws ProductException {
         ProductRecord product = productService.getDataProductById(id);
         return ResponseEntity.ok(product);

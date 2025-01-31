@@ -192,7 +192,7 @@ public class OrderServiceImp implements OrderService, OrderItemService {
         Iterator<OrderItem> it = order.getOrderItemList().iterator();
         while (it.hasNext()){
             OrderItem aux = it.next();
-            ProductRecord product = restTemplate.getForObject(productPath + "/admin/" + aux.getProductId(), ProductRecord.class );
+            ProductRecord product = restTemplate.getForObject(productPath + "/public/" + aux.getProductId(), ProductRecord.class );
             listProducts.add(product);
         }
         OrderToPdfDTO orderToPdfDTO = new OrderToPdfDTO(order.getId(), order.getUserId(), userMail, listProducts);
